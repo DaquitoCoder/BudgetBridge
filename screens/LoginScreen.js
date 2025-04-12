@@ -57,7 +57,12 @@ const LoginScreen = () => {
         />
 
         <TouchableOpacity style={styles.forgotPasswordContainer}>
-          <Text style={[styles.forgotPasswordText, { fontFamily: 'SpaceGroteskRegular' }]}>
+          <Text
+            style={[
+              styles.forgotPasswordText,
+              { fontFamily: 'SpaceGroteskRegular' },
+            ]}
+          >
             ¿Olvidaste tu contraseña?
           </Text>
         </TouchableOpacity>
@@ -150,7 +155,7 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#FFF',
     fontSize: 16,
-    textDecorationLine: 'underline'
+    textDecorationLine: 'underline',
   },
 });
 
