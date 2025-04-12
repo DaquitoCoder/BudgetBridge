@@ -1,15 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import { app } from '../firebase';
 
 import Input from '../components/Input';
 import Button from '../components/Button';
 import * as SplashScreen from 'expo-splash-screen';
 
 const LoginScreen = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const navigation = useNavigation();
   const [loaded, error] = useFonts({
@@ -27,6 +45,97 @@ const LoginScreen = () => {
     return null;
   }
 
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // El usuario ya está autenticado, redirigir a Home
+        navigation.replace('Dashboard');
+      }
+      setInitializing(false);
+    });
+
+    // Limpiar el listener cuando el componente se desmonte
+    return unsubscribe;
+  }, []);
+
+  // Validación de email
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('El correo electrónico es obligatorio');
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Introduce un correo electrónico válido');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  // Validación de contraseña
+  const validatePassword = (password) => {
+    if (!password) {
+      setPasswordError('La contraseña es obligatoria');
+      return false;
+    } else if (password.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
+
+  const handleLogin = () => {
+    // Validar los campos antes de proceder
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (!isEmailValid || !isPasswordValid) {
+      return;
+    }
+
+    setIsLoading(true);
+    const auth = getAuth();
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        navigation.navigate('Dashboard');
+      })
+      .catch((error) => {
+        let errorMessage;
+        console.log(error, error.code, error.message);
+        switch (error.code) {
+          case 'auth/invalid-credential':
+            errorMessage = 'Credenciales de inicio de sesión inválidas';
+            break;
+          case 'auth/internal-error':
+            errorMessage = 'Error interno del servidor';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Demasiados intentos fallidos. Inténtalo más tarde';
+            break;
+          default:
+            errorMessage = error.message;
+        }
+        Alert.alert('Error', errorMessage);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  if (initializing) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size='large' color='#FF6B6B' />
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
@@ -42,19 +151,33 @@ const LoginScreen = () => {
 
       <View style={styles.formContainer}>
         <Input
-          placeholder='Escribe tu nombre de usuario'
-          value={username}
-          onChangeText={setUsername}
+          placeholder='Escribe tu correo electrónico'
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (emailError) validateEmail(text);
+          }}
           icon='user'
         />
+
+        {emailError ? (
+          <Text style={styles.emailError}>{emailError}</Text>
+        ) : null}
 
         <Input
           placeholder='Escribe tu contraseña'
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            if (passwordError) validatePassword(text);
+          }}
           secureTextEntry
           icon='lock'
         />
+
+        {passwordError ? (
+          <Text style={styles.passwordError}>{passwordError}</Text>
+        ) : null}
 
         <TouchableOpacity style={styles.forgotPasswordContainer}>
           <Text
@@ -69,8 +192,9 @@ const LoginScreen = () => {
 
         <Button
           title='Iniciar sesión'
-          onPress={() => navigation.navigate('Dashboard')}
+          onPress={handleLogin}
           variant='primary'
+          disabled={isLoading}
         />
 
         <View style={styles.dividerContainer}>
@@ -128,6 +252,14 @@ const styles = StyleSheet.create({
     color: '#FFF',
     textDecorationLine: 'underline',
     fontSize: 16,
+  },
+  emailError: {
+    color: '#d95f80',
+    marginBottom: 15
+  },
+  passwordError: {
+    color: '#d95f80',
+    marginBottom: 15
   },
   dividerContainer: {
     flexDirection: 'row',
