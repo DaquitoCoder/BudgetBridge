@@ -5,6 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import DashboardScreen from './screens/DashboardScreen';
+import CreateAccountScreen from './screens/CreateAccountScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import { app } from './firebase';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +30,16 @@ export default function App() {
           <Stack.Screen
             name='Dashboard'
             component={DashboardScreen}
+            options={{ headerShown: false, animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name='CreateAccount'
+            component={CreateAccountScreen}
+            options={{ headerShown: false, animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name='ForgotPassword'
+            component={ForgotPasswordScreen}
             options={{ headerShown: false, animation: 'slide_from_right' }}
           />
         </Stack.Navigator>

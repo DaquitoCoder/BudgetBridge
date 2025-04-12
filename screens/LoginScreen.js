@@ -6,7 +6,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -15,7 +15,6 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { app } from '../firebase';
 
 import Input from '../components/Input';
 import Button from '../components/Button';
@@ -179,7 +178,10 @@ const LoginScreen = () => {
           <Text style={styles.passwordError}>{passwordError}</Text>
         ) : null}
 
-        <TouchableOpacity style={styles.forgotPasswordContainer}>
+        <TouchableOpacity
+          style={styles.forgotPasswordContainer}
+          onPress={() => navigation.navigate('ForgotPassword')}
+        >
           <Text
             style={[
               styles.forgotPasswordText,
@@ -212,7 +214,9 @@ const LoginScreen = () => {
 
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>¿Eres nuevo? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CreateAccount')}
+          >
             <Text style={styles.signupLink}>Crear cuenta nueva</Text>
           </TouchableOpacity>
         </View>
@@ -255,11 +259,11 @@ const styles = StyleSheet.create({
   },
   emailError: {
     color: '#d95f80',
-    marginBottom: 15
+    marginBottom: 15,
   },
   passwordError: {
     color: '#d95f80',
-    marginBottom: 15
+    marginBottom: 15,
   },
   dividerContainer: {
     flexDirection: 'row',
