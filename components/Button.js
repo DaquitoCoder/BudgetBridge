@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useFonts } from 'expo-font';
-import { Feather } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -83,10 +83,10 @@ const Button = ({
       ) : (
         <React.Fragment>
           {icon && (
-            <Feather
+            <AntDesign
               name={icon}
               size={18}
-              color={variant === 'outline' ? '#A3E4D7' : '#1E2429'}
+              color={variant === 'outline' ? '#FFF' : '#000'}
               style={styles.icon}
             />
           )}
@@ -142,13 +142,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   primaryText: {
-    color: '#1E2429',
+    color: '#000',
   },
   secondaryText: {
     color: '#FFFFFF',
   },
   outlineText: {
-    color: '#A3E4D7',
+    color: '#FFFFFF',
   },
   dangerText: {
     color: '#FFFFFF',
