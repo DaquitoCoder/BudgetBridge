@@ -21,6 +21,8 @@ import Button from '../components/Button';
 import * as SplashScreen from 'expo-splash-screen';
 
 const LoginScreen = () => {
+  const navigation = useNavigation();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +30,6 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const navigation = useNavigation();
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require('../assets/fonts/SpaceGrotesk-Bold.ttf'),
     SpaceGroteskRegular: require('../assets/fonts/SpaceGrotesk-Regular.ttf'),
@@ -39,10 +40,6 @@ const LoginScreen = () => {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
-
-  if (!loaded && !error) {
-    return null;
-  }
 
   useEffect(() => {
     const auth = getAuth();
@@ -125,6 +122,10 @@ const LoginScreen = () => {
         setIsLoading(false);
       });
   };
+
+  if (!loaded && !error) {
+    return null;
+  }
 
   if (initializing) {
     return (

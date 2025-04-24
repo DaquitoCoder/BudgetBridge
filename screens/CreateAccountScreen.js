@@ -108,13 +108,9 @@ const CreateAccountScreen = () => {
 
         // Actualizar el perfil del usuario con el nombre
         await updateProfile(user, {
-          displayName: name,
+          displayName: fullName,
         });
-        Alert.alert(
-          'Registro Exitoso',
-          '¡Tu cuenta ha sido creada correctamente!',
-          [{ text: 'OK', onPress: () => navigation.replace('Dashboard') }]
-        );
+        
       })
       .catch((error) => {
         // Traducción de errores comunes de Firebase para una mejor UX
