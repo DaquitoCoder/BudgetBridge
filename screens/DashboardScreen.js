@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -12,16 +10,17 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import Button from '../components/Button';
 import { Feather } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 const DashboardScreen = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const { currentUser } = useAuth();
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require('../assets/fonts/SpaceGrotesk-Bold.ttf'),
@@ -34,33 +33,25 @@ const DashboardScreen = () => {
     }
   }, [loaded, error]);
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        // Si no hay usuario, redirigir al login
-        navigation.replace('Login');
-      }
-      setLoading(false);
-    });
-
-    // Limpiar el listener cuando el componente se desmonte
-    return unsubscribe;
-  }, []);
-
   const handleLogout = () => {
     const auth = getAuth();
     setLoading(true);
     signOut(auth)
       .then(() => {
-        navigation.replace('Login');
+        // No necesitamos navegar manualmente, el AuthContext se encargará de eso
       })
       .catch((error) => {
         Alert.alert('Error', 'No se pudo cerrar sesión');
         setLoading(false);
       });
+  };
+
+  const navigateToProfile = () => {
+    navigation.navigate('Profile');
+  };
+
+  const navigateToSettings = () => {
+    navigation.navigate('Settings');
   };
 
   if (!loaded && !error) {
@@ -89,17 +80,23 @@ const DashboardScreen = () => {
 
       <ScrollView style={styles.content}>
         <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            {user?.photoURL ? (
-              <Image source={{ uri: user.photoURL }} style={styles.avatar} />
+          <TouchableOpacity
+            onPress={navigateToProfile}
+            style={styles.avatarContainer}
+          >
+            {currentUser?.photoURL ? (
+              <Image
+                source={{ uri: currentUser.photoURL }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {user?.email?.charAt(0).toUpperCase() || '?'}
+                  {currentUser?.email?.charAt(0).toUpperCase() || '?'}
                 </Text>
               </View>
             )}
-          </View>
+          </TouchableOpacity>
 
           <Text
             style={[styles.welcomeText, { fontFamily: 'SpaceGroteskBold' }]}
@@ -107,11 +104,11 @@ const DashboardScreen = () => {
             ¡Bienvenid@!
           </Text>
 
-          {user?.displayName && (
+          {currentUser?.displayName && (
             <Text
               style={[styles.displayName, { fontFamily: 'SpaceGroteskBold' }]}
             >
-              {user.displayName}
+              {currentUser.displayName}
             </Text>
           )}
         </View>
@@ -130,7 +127,7 @@ const DashboardScreen = () => {
             <Text
               style={[styles.infoValue, { fontFamily: 'SpaceGroteskRegular' }]}
             >
-              {user?.email}
+              {currentUser?.email}
             </Text>
           </View>
 
@@ -143,7 +140,7 @@ const DashboardScreen = () => {
             <Text
               style={[styles.infoValue, { fontFamily: 'SpaceGroteskRegular' }]}
             >
-              {user?.uid}
+              {currentUser?.uid}
             </Text>
           </View>
 
@@ -156,7 +153,7 @@ const DashboardScreen = () => {
             <Text
               style={[styles.infoValue, { fontFamily: 'SpaceGroteskRegular' }]}
             >
-              {user?.emailVerified ? 'Sí' : 'No'}
+              {currentUser?.emailVerified ? 'Sí' : 'No'}
             </Text>
           </View>
 
@@ -169,8 +166,10 @@ const DashboardScreen = () => {
             <Text
               style={[styles.infoValue, { fontFamily: 'SpaceGroteskRegular' }]}
             >
-              {user?.metadata?.creationTime
-                ? new Date(user.metadata.creationTime).toLocaleDateString()
+              {currentUser?.metadata?.creationTime
+                ? new Date(
+                    currentUser.metadata.creationTime
+                  ).toLocaleDateString()
                 : 'No disponible'}
             </Text>
           </View>
@@ -184,21 +183,42 @@ const DashboardScreen = () => {
             <Text
               style={[styles.infoValue, { fontFamily: 'SpaceGroteskRegular' }]}
             >
-              {user?.metadata?.lastSignInTime
-                ? new Date(user.metadata.lastSignInTime).toLocaleDateString()
+              {currentUser?.metadata?.lastSignInTime
+                ? new Date(
+                    currentUser.metadata.lastSignInTime
+                  ).toLocaleDateString()
                 : 'No disponible'}
             </Text>
           </View>
         </View>
 
+        <View style={styles.menuCard}>
+          <TouchableOpacity style={styles.menuItem} onPress={navigateToProfile}>
+            <Feather name='user' size={24} color='#FF6B6B' />
+            <Text style={styles.menuItemText}>Mi Perfil</Text>
+            <Feather name='chevron-right' size={24} color='#AAAAAA' />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={navigateToSettings}
+          >
+            <Feather name='settings' size={24} color='#FF6B6B' />
+            <Text style={styles.menuItemText}>Configuración</Text>
+            <Feather name='chevron-right' size={24} color='#AAAAAA' />
+          </TouchableOpacity>
+
+          {/* Puedes añadir más opciones de menú aquí */}
+        </View>
+
         <View style={styles.actionsContainer}>
           <Button
             title='Actualizar perfil'
-            onPress={() => {}}
+            onPress={navigateToProfile}
             variant='primary'
           />
 
-          {!user?.emailVerified && (
+          {!currentUser?.emailVerified && (
             <Button
               title='Verificar email'
               onPress={() => {}}
@@ -285,6 +305,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginBottom: 24,
+  },
+  menuCard: {
+    backgroundColor: '#2A3038',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 24,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3A404A',
+  },
+  menuItemText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginLeft: 15,
+    flex: 1,
   },
   infoTitle: {
     color: '#FFFFFF',

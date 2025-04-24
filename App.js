@@ -1,56 +1,23 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, SafeAreaView } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import WelcomeScreen from './screens/WelcomeScreen';
-import LoginScreen from './screens/LoginScreen';
-import DashboardScreen from './screens/DashboardScreen';
-import CreateAccountScreen from './screens/CreateAccountScreen';
-import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
-import { app } from './firebase';
+import { AuthProvider } from './contexts/AuthContext';
+import { AppNavigator } from './navigation/AppNavigator';
+import { initializeApp } from 'firebase/app';
 
-const Stack = createStackNavigator();
+const firebaseConfig = {
+  apiKey: 'AIzaSyC6Xb00ZL0u6D7GvfKFu8-whV5Z0TJVvpg',
+  authDomain: 'budgetbridge-1.firebaseapp.com',
+  projectId: 'budgetbridge-1',
+  storageBucket: 'budgetbridge-1.firebasestorage.app',
+  messagingSenderId: '1010220322602',
+  appId: '1:1010220322602:web:b0b776ac016b14889b9853',
+  measurementId: 'G-EPRYJX2YTD',
+};
+
+initializeApp(firebaseConfig);
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle='dark-content' backgroundColor='#1E2429' />
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName='Welcome'>
-          <Stack.Screen
-            name='Welcome'
-            component={WelcomeScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name='Login'
-            component={LoginScreen}
-            options={{ headerShown: false, animation: 'reveal_from_bottom' }}
-          />
-          <Stack.Screen
-            name='Dashboard'
-            component={DashboardScreen}
-            options={{ headerShown: false, animation: 'slide_from_right' }}
-          />
-          <Stack.Screen
-            name='CreateAccount'
-            component={CreateAccountScreen}
-            options={{ headerShown: false, animation: 'slide_from_right' }}
-          />
-          <Stack.Screen
-            name='ForgotPassword'
-            component={ForgotPasswordScreen}
-            options={{ headerShown: false, animation: 'slide_from_right' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaView>
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-});
