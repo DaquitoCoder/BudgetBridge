@@ -1,85 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { Feather } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
+
+import * as SplashScreen from 'expo-splash-screen';
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [isSent, setIsSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
+  const [loaded, error] = useFonts({
+    SpaceGroteskBold: require('../assets/fonts/SpaceGrotesk-Bold.ttf'),
+    SpaceGroteskRegular: require('../assets/fonts/SpaceGrotesk-Regular.ttf'),
+  });
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
+    return null;
+  }
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('El correo electrónico es obligatorio');
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Introduce un correo electrónico válido');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
 
   const handleSendResetLink = () => {
     // Aquí iría la lógica para enviar el enlace de restablecimiento
-    setIsSent(true);
+    if (!validateEmail(email)) return;
+
+    setIsLoading(true);
+    const auth = getAuth();
+
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        // Password reset email sent!
+        setIsSent(true);
+      })
+      .catch((error) => {
+        let errorMessage;
+        switch (error.code) {
+          case 'auth/user-not-found':
+            errorMessage =
+              'No existe ninguna cuenta con este correo electrónico';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'El formato del correo electrónico no es válido';
+            break;
+          default:
+            errorMessage = error.message;
+        }
+        Alert.alert('Error', errorMessage);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Feather name="arrow-left" size={24} color="#A3E4D7" />
-      </TouchableOpacity>
-
       <View style={styles.logoContainer}>
-        <Image 
-          source={require('../assets/logo.png')} 
-          style={styles.logo} 
-          resizeMode="contain"
+        <Image
+          source={require('../assets/logo.png')}
+          style={styles.logo}
+          resizeMode='contain'
         />
-        <Text style={styles.title}>Recuperar contraseña</Text>
+        <Text style={styles.title}>¿Olvidaste tu contraseña?</Text>
       </View>
-      
+
       <View style={styles.formContainer}>
         {!isSent ? (
           <>
             <Text style={styles.description}>
-              Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+              No te preocupes, sabemos que le pasa hasta al mejor hacker.
+              {'\n'}
+              Solo escribe tu correo y te enviaremos un enlace para recuperarla.
             </Text>
-            
+
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
             <Input
-              placeholder="Correo electrónico"
+              placeholder='Correo electrónico'
               value={email}
               onChangeText={setEmail}
-              icon="mail"
-              keyboardType="email-address"
+              icon='mail'
+              keyboardType='email-address'
             />
-            
-            <Button 
-              title="Enviar enlace de recuperación" 
-              onPress={handleSendResetLink} 
-              variant="primary"
+
+            <Button
+              title='Enviar enlace de recuperación'
+              onPress={handleSendResetLink}
+              disabled={isLoading}
+              variant='primary'
             />
           </>
         ) : (
           <>
             <View style={styles.successContainer}>
               <View style={styles.iconCircle}>
-                <Feather name="check" size={32} color="#A3E4D7" />
+                <Feather name='check' size={32} color='#A3E4D7' />
               </View>
               <Text style={styles.successTitle}>¡Enlace enviado!</Text>
               <Text style={styles.successDescription}>
-                Hemos enviado un enlace de recuperación a tu correo electrónico. Por favor revisa tu bandeja de entrada.
+                Hemos enviado un enlace de recuperación a tu correo electrónico.
+                Por favor revisa tu bandeja de entrada.
               </Text>
             </View>
-            
-            <Button 
-              title="Volver al inicio de sesión" 
-              onPress={() => navigation.navigate('Login')} 
-              variant="primary"
-            />
           </>
         )}
-        
-        <TouchableOpacity 
-          style={styles.loginLink}
+
+        <View style={styles.dividerContainer}>
+          <View style={styles.divider} />
+          <Text style={styles.dividerText}>O</Text>
+          <View style={styles.divider} />
+        </View>
+
+        <Button
+          title='Volver al inicio de sesión'
           onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.loginLinkText}>Volver al inicio de sesión</Text>
-        </TouchableOpacity>
+          variant='outline'
+        />
+
+        <View style={styles.signupContainer}>
+          <Text style={styles.signupText}>¿Eres nuevo? </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CreateAccount')}
+          >
+            <Text style={styles.signupLink}>Crear cuenta nueva</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -100,22 +169,28 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 40,
   },
+  errorText: {
+    color: '#d95f80',
+    marginBottom: 4,
+  },
   logo: {
-    width: 60,
-    height: 60,
+    width: 140,
+    height: 140,
     marginBottom: 16,
   },
   title: {
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'SpaceGroteskBold',
   },
   description: {
-    color: '#A0A0A0',
+    color: '#FFFFFF',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+    fontFamily: 'SpaceGroteskRegular',
   },
   formContainer: {
     flex: 1,
@@ -140,6 +215,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#FFF',
+  },
+  dividerText: {
+    color: '#FFF',
+    paddingHorizontal: 16,
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  signupText: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  signupLink: {
+    color: '#FFF',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
   successTitle: {
     color: '#FFFFFF',

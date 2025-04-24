@@ -141,13 +141,6 @@ const CreateAccountScreen = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Feather name='arrow-left' size={24} color='#A3E4D7' />
-      </TouchableOpacity>
-
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
           <Image
@@ -162,70 +155,64 @@ const CreateAccountScreen = () => {
         </View>
 
         <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Input
-              placeholder='Nombre completo'
-              value={fullName}
-              onChangeText={(text) => {
-                setFullName(text);
-                if (nameError) validateName(text);
-              }}
-              icon='user'
-            />
-            {nameError ? (
-              <Text style={styles.errorText}>{nameError}</Text>
-            ) : null}
-          </View>
+          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+          <Input
+            placeholder='Nombre completo'
+            value={fullName}
+            onChangeText={(text) => {
+              setFullName(text);
+              if (nameError) validateName(text);
+            }}
+            icon='user'
+          />
 
-          <View style={styles.inputContainer}>
-            <Input
-              placeholder='Correo electrónico'
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (emailError) validateEmail(text);
-              }}
-              icon='mail'
-              keyboardType='email-address'
-            />
+          {emailError ? (
+            <Text style={styles.errorText}>{emailError}</Text>
+          ) : null}
 
-            {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
-            ) : null}
-          </View>
-          <View style={styles.inputContainer}>
-            <Input
-              placeholder='Contraseña'
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (passwordError) validatePassword(text);
-                if (confirmPassword && confirmPasswordError) {
-                  validateConfirmPassword(confirmPassword);
-                }
-              }}
-              secureTextEntry
-              icon='lock'
-            />
-            {passwordError ? (
-              <Text style={styles.errorText}>{passwordError}</Text>
-            ) : null}
-          </View>
-          <View style={styles.inputContainer}>
-            <Input
-              placeholder='Confirmar contraseña'
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                if (confirmPasswordError) validateConfirmPassword(text);
-              }}
-              secureTextEntry
-              icon='lock'
-            />
-            {confirmPasswordError ? (
-              <Text style={styles.errorText}>{confirmPasswordError}</Text>
-            ) : null}
-          </View>
+          <Input
+            placeholder='Correo electrónico'
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (emailError) validateEmail(text);
+            }}
+            icon='mail'
+            keyboardType='email-address'
+          />
+
+          {passwordError ? (
+            <Text style={styles.errorText}>{passwordError}</Text>
+          ) : null}
+
+          <Input
+            placeholder='Contraseña'
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (passwordError) validatePassword(text);
+              if (confirmPassword && confirmPasswordError) {
+                validateConfirmPassword(confirmPassword);
+              }
+            }}
+            secureTextEntry
+            icon='lock'
+          />
+
+          {confirmPasswordError ? (
+            <Text style={styles.errorText}>{confirmPasswordError}</Text>
+          ) : null}
+
+          <Input
+            placeholder='Confirmar contraseña'
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              if (confirmPasswordError) validateConfirmPassword(text);
+            }}
+            secureTextEntry
+            icon='lock'
+          />
 
           <TouchableOpacity
             style={styles.termsContainer}
@@ -247,13 +234,6 @@ const CreateAccountScreen = () => {
             title={isLoading ? 'Cargando...' : 'Crear cuenta'}
             onPress={handleRegister}
             variant='primary'
-            disabled={
-              !acceptTerms ||
-              !fullName ||
-              !email ||
-              !password ||
-              !confirmPassword
-            }
           />
 
           <View style={styles.dividerContainer}>
@@ -297,14 +277,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 140,
+    height: 140,
     marginBottom: 16,
   },
   errorText: {
     color: '#FF6B6B',
     fontSize: 12,
-    marginTop: 4,
+    marginBottom: 4,
   },
   title: {
     color: '#FFFFFF',
@@ -319,7 +299,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   formContainer: {
-    marginBottom: 40,
+    marginBottom: 10,
   },
   inputContainer: {
     marginBottom: 10,

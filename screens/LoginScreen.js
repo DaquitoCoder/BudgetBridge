@@ -149,6 +149,8 @@ const LoginScreen = () => {
       </View>
 
       <View style={styles.formContainer}>
+        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
         <Input
           placeholder='Escribe tu correo electrónico'
           value={email}
@@ -159,8 +161,8 @@ const LoginScreen = () => {
           icon='user'
         />
 
-        {emailError ? (
-          <Text style={styles.emailError}>{emailError}</Text>
+        {passwordError ? (
+          <Text style={styles.errorText}>{passwordError}</Text>
         ) : null}
 
         <Input
@@ -173,10 +175,6 @@ const LoginScreen = () => {
           secureTextEntry
           icon='lock'
         />
-
-        {passwordError ? (
-          <Text style={styles.passwordError}>{passwordError}</Text>
-        ) : null}
 
         <TouchableOpacity
           style={styles.forgotPasswordContainer}
@@ -237,8 +235,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 140,
+    height: 140,
     marginBottom: 16,
   },
   welcomeText: {
@@ -257,13 +255,9 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     fontSize: 16,
   },
-  emailError: {
+  errorText: {
     color: '#d95f80',
-    marginBottom: 15,
-  },
-  passwordError: {
-    color: '#d95f80',
-    marginBottom: 15,
+    marginBottom: 4,
   },
   dividerContainer: {
     flexDirection: 'row',
