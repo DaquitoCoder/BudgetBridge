@@ -7,7 +7,8 @@ import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 // Importar pantallas
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
-import CreateAccountScreen from '../screens/CreateAccountScreen';
+import CreateAccountStep1Screen from '../screens/CreateAccountStep1Screen';
+import CreateAccountStep2Screen from '../screens/CreateAccountStep2Screen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import CustomDrawer from '../components/CustomDrawer';
@@ -25,10 +26,18 @@ const AuthStack = () => {
         component={LoginScreen}
         options={{ headerShown: false, animation: 'reveal_from_bottom' }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name='CreateAccount'
         component={CreateAccountScreen}
         options={{ headerShown: false, animation: 'slide_from_right' }}
+      /> */}
+      <Stack.Screen
+        name='CreateAccountStep1'
+        component={CreateAccountStep1Screen}
+      />
+      <Stack.Screen
+        name='CreateAccountStep2'
+        component={CreateAccountStep2Screen}
       />
       <Stack.Screen
         name='ForgotPassword'

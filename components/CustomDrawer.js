@@ -10,9 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const CustomDrawer = (props) => {
   const { currentUser } = useAuth();
-
-  console.log('currentUser', currentUser);
-
+  
   const handleLogout = () => {
     const auth = getAuth();
     signOut(auth).catch((error) => {

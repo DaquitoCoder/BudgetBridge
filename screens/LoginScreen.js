@@ -102,7 +102,6 @@ const LoginScreen = () => {
       })
       .catch((error) => {
         let errorMessage;
-        console.log(error, error.code, error.message);
         switch (error.code) {
           case 'auth/invalid-credential':
             errorMessage = 'Credenciales de inicio de sesión inválidas';
@@ -214,7 +213,7 @@ const LoginScreen = () => {
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>¿Eres nuevo? </Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('CreateAccount')}
+            onPress={() => navigation.navigate('CreateAccountStep1')}
           >
             <Text style={styles.signupLink}>Crear cuenta nueva</Text>
           </TouchableOpacity>
