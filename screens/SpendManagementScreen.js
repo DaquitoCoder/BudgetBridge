@@ -12,6 +12,17 @@ import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import Header from "../components/Header"
 
 export default function App() {
+    const [loaded, error] = useFonts({
+        SpaceGroteskBold: require('../assets/fonts/SpaceGrotesk-Bold.ttf'),
+        SpaceGroteskRegular: require('../assets/fonts/SpaceGrotesk-Regular.ttf'),
+      });
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
   const [expenses, setExpenses] = useState([
     {
       id: 1,
@@ -88,6 +99,10 @@ export default function App() {
     return `$${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
   };
 
+  if (!loaded && !error) {
+    return null;
+  }
+  
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
