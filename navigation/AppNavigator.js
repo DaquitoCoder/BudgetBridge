@@ -11,6 +11,7 @@ import CreateAccountStep1Screen from '../screens/CreateAccountStep1Screen';
 import CreateAccountStep2Screen from '../screens/CreateAccountStep2Screen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
+import SpendManagementScreen from '../screens/SpendManagementScreen';
 import CustomDrawer from '../components/CustomDrawer';
 
 const Stack = createStackNavigator();
@@ -79,6 +80,11 @@ const MainDrawer = () => {
         component={MainStack}
         options={{ title: 'Prueba' }}
       />
+      <Drawer.Screen
+        name='SpendManagementScreen'
+        component={SpendManagementStack}
+        options={{ title: 'Gestion de gastos' }}
+      />
     </Drawer.Navigator>
   );
 };
@@ -96,6 +102,12 @@ const MainStack = () => {
     </Stack.Navigator>
   );
 };
+
+const SpendManagementStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name='Gastos' component={SpendManagementScreen} />
+  </Stack.Navigator>
+);
 
 export const AppNavigator = () => {
   const { isAuthenticated } = useAuth();
