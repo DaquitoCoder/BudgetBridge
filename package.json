@@ -9,10 +9,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-navigation/drawer": "^7.3.9",
     "@react-navigation/native": "^7.1.5",
     "@react-navigation/stack": "^7.2.9",
+    "budget-bridge": "file:",
     "expo": "~52.0.43",
     "expo-font": "~13.0.4",
     "expo-linear-gradient": "~14.0.2",
