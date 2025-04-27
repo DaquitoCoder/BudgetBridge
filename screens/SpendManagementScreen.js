@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  SafeAreaView, 
-  TouchableOpacity, 
-  ScrollView, 
-  StatusBar 
-} from 'react-native';
-import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
-import Header from "../components/Header"
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+  StatusBar,
+} from "react-native";
+import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
+import * as SplashScreen from "expo-splash-screen";
+import Header from "../components/Header";
+import { useFonts } from "expo-font";
 
 export default function App() {
-    const [loaded, error] = useFonts({
-        SpaceGroteskBold: require('../assets/fonts/SpaceGrotesk-Bold.ttf'),
-        SpaceGroteskRegular: require('../assets/fonts/SpaceGrotesk-Regular.ttf'),
-      });
+  const [loaded, error] = useFonts({
+    SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
+    SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
+  });
 
   useEffect(() => {
     if (loaded || error) {
@@ -102,56 +104,59 @@ export default function App() {
   if (!loaded && !error) {
     return null;
   }
-  
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      
+
       <Header title="SpendManagement" />
-      
-      
+
       {/* Main Content */}
       <View style={styles.content}>
         <Text style={styles.title}>Gestión de gastos</Text>
-        
+
         {/* Filter Buttons */}
         <View style={styles.filterContainer}>
           <TouchableOpacity style={styles.filterButton}>
             <Feather name="sliders" size={16} color="white" />
             <Text style={styles.filterText}>Filtrar por</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.filterButton}>
             <MaterialIcons name="sort-by-alpha" size={16} color="white" />
             <Text style={styles.filterText}>Ordenar por</Text>
           </TouchableOpacity>
         </View>
-        
+
         {/* Expenses List */}
         <View style={styles.dashboardCard}>
-        <Text style={styles.sectionTitle}>Gastos recientes</Text>
-        <ScrollView style={styles.expensesList}>
-          {expenses.map((expense) => (
-            <View key={expense.id} style={styles.expenseItem}>
-              <View style={styles.expenseRow}>
-                <Text style={styles.expenseName}>{expense.name}</Text>
-                <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
+          <Text style={styles.sectionTitle}>Gastos recientes</Text>
+          <ScrollView style={styles.expensesList}>
+            {expenses.map((expense) => (
+              <View key={expense.id} style={styles.expenseItem}>
+                <View style={styles.expenseRow}>
+                  <Text style={styles.expenseName}>{expense.name}</Text>
+                  <Text style={styles.expenseAmount}>
+                    {formatCurrency(expense.amount)}
+                  </Text>
+                </View>
+                <View style={styles.expenseDetails}>
+                  <Text style={styles.expenseCategory}>
+                    Categoría: {expense.category}
+                  </Text>
+                  <Text style={styles.expenseDate}>{expense.date}</Text>
+                </View>
               </View>
-              <View style={styles.expenseDetails}>
-                <Text style={styles.expenseCategory}>Categoría: {expense.category}</Text>
-                <Text style={styles.expenseDate}>{expense.date}</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
         </View>
-        
+
         {/* Total */}
         <View style={styles.totalContainer}>
           <Text style={styles.totalLabel}>Total del mes:</Text>
           <Text style={styles.totalAmount}>{formatCurrency(totalMonth)}</Text>
         </View>
-        
+
         {/* Add Button */}
         <TouchableOpacity style={styles.addButton}>
           <Feather name="plus" size={20} color="black" />
@@ -165,35 +170,35 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#363E40',
+    backgroundColor: "#363E40",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   logoBox: {
     width: 32,
     height: 32,
-    backgroundColor: 'rgba(140, 227, 195, 0.2)',
+    backgroundColor: "rgba(140, 227, 195, 0.2)",
     borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoText: {
-    color: 'white',
+    color: "white",
     marginLeft: 8,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   icon: {
     marginRight: 16,
@@ -204,32 +209,32 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '500',
-    color: 'white',
+    fontWeight: "500",
+    color: "white",
     marginBottom: 16,
   },
   filterContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 16,
     gap: 12,
   },
   filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2A3038',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2A3038",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
     gap: 8,
   },
   filterText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '500',
-    color: 'white',
+    fontWeight: "500",
+    color: "white",
     marginBottom: 12,
   },
   expensesList: {
@@ -237,70 +242,70 @@ const styles = StyleSheet.create({
   },
   expenseItem: {
     borderBottomWidth: 1,
-    borderBottomColor: '#1E1E1E',
+    borderBottomColor: "#1E1E1E",
     paddingBottom: 12,
     marginBottom: 12,
   },
   expenseRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   expenseName: {
-    color: 'white',
-    fontWeight: '500',
+    color: "white",
+    fontWeight: "500",
     fontSize: 16,
   },
   expenseAmount: {
-    color: 'white',
-    fontWeight: '500',
+    color: "white",
+    fontWeight: "500",
     fontSize: 16,
   },
   expenseDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 4,
   },
   expenseCategory: {
-    color: '#9E9E9E',
+    color: "#9E9E9E",
     fontSize: 14,
   },
   expenseDate: {
-    color: '#9E9E9E',
+    color: "#9E9E9E",
     fontSize: 14,
   },
   totalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: '#1E1E1E',
+    borderTopColor: "#1E1E1E",
     paddingTop: 12,
     marginTop: 8,
   },
   totalLabel: {
-    color: 'white',
-    fontWeight: '500',
+    color: "white",
+    fontWeight: "500",
     fontSize: 16,
   },
   totalAmount: {
-    color: 'white',
-    fontWeight: '700',
+    color: "white",
+    fontWeight: "700",
     fontSize: 16,
   },
   addButton: {
-    backgroundColor: '#8CE3C3',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#8CE3C3",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 12,
     borderRadius: 6,
     marginTop: 16,
     gap: 8,
   },
   addButtonText: {
-    color: 'black',
-    fontWeight: '500',
+    color: "black",
+    fontWeight: "500",
     fontSize: 16,
   },
   dashboardCard: {
