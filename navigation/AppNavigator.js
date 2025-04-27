@@ -13,6 +13,7 @@ import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import SpendManagementScreen from "../screens/SpendManagementScreen";
 import CustomDrawer from "../components/CustomDrawer";
+import GoalsScreen from "../screens/GoalsScreen";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -85,6 +86,11 @@ const MainDrawer = () => {
         component={SpendManagementStack}
         options={{ title: "Gestion de gastos" }}
       />
+      <Drawer.Screen
+        name="GoalsScreen"
+        component={GoalsStack}
+        options={{ title: "Metas de ahorro" }}
+      />
     </Drawer.Navigator>
   );
 };
@@ -98,7 +104,6 @@ const MainStack = () => {
         component={DashboardScreen}
         options={{ headerShown: false, animation: "slide_from_right" }}
       />
-      {/* Agrega aquí otras pantallas protegidas */}
     </Stack.Navigator>
   );
 };
@@ -106,6 +111,12 @@ const MainStack = () => {
 const SpendManagementStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Gastos" component={SpendManagementScreen} />
+  </Stack.Navigator>
+);
+
+const GoalsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Goals" component={GoalsScreen} />
   </Stack.Navigator>
 );
 

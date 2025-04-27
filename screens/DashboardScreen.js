@@ -1,26 +1,25 @@
-import { useState, useEffect } from "react";
+// screens/DashboardScreen.js
+
+import React, { useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
-  Alert,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { getAuth, signOut } from "firebase/auth";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
+import SavingsCard from "../components/SavingsCard";
 
 const DashboardScreen = () => {
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
   const navigation = useNavigation();
   const { currentUser } = useAuth();
+  const email = currentUser?.email || "";
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -31,48 +30,13 @@ const DashboardScreen = () => {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
-    setEmail(currentUser?.email || "");
   }, [loaded, error]);
 
-  const handleLogout = () => {
-    const auth = getAuth();
-    setLoading(true);
-    signOut(auth).catch((error) => {
-      Alert.alert("Error", "No se pudo cerrar sesión");
-      setLoading(false);
-    });
-  };
-
-  const navigateToProfile = () => {
-    navigation.navigate("Profile");
-  };
-
-  const navigateToSettings = () => {
-    navigation.navigate("Settings");
-  };
-
-  const navigateToAddGoal = () => {
-    // Aquí navegarías a la pantalla de añadir meta
-    Alert.alert("Acción", "Navegar a la pantalla de añadir meta");
-  };
-
   const navigateToAllGoals = () => {
-    // Aquí navegarías a la pantalla de todas las metas
-    Alert.alert("Acción", "Navegar a la pantalla de todas las metas");
+    navigation.navigate("GoalsScreen", { email });
   };
 
-  if (!loaded && !error) {
-    return null;
-  }
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#FF6B6B" />
-        <Text style={styles.loadingText}>Cargando...</Text>
-      </View>
-    );
-  }
+  if (!loaded && !error) return null;
 
   return (
     <View style={styles.container}>
@@ -81,6 +45,7 @@ const DashboardScreen = () => {
       <ScrollView style={styles.content}>
         <Text style={styles.pageTitle}>Mi tablero</Text>
 
+        {/* Tarjeta de ingresos/gastos */}
         <View style={styles.dashboardCard}>
           <View style={styles.progressContainer}>
             <View style={styles.progressCircle}>
@@ -113,6 +78,7 @@ const DashboardScreen = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Tarjeta de categorías */}
         <View style={styles.dashboardCard}>
           <Text style={styles.cardTitle}>
             Tus gastos organizados por categoría
@@ -140,49 +106,8 @@ const DashboardScreen = () => {
           </View>
         </View>
 
-        {/* Nueva sección de Metas de Ahorro */}
-        <View style={styles.dashboardCard}>
-          <Text style={styles.cardTitle}>
-            Define tus metas de ahorro mensual
-          </Text>
-
-          <View style={styles.savingsContainer}>
-            <View style={styles.savingsProgressBar}>
-              <View style={styles.savingsProgressInner} />
-            </View>
-
-            <View style={styles.trophyContainer}>
-              <FontAwesome5 name="trophy" size={24} color="#4CD964" />
-            </View>
-          </View>
-
-          <View style={styles.savingsAmountContainer}>
-            <Text style={styles.savingsAmount}>$0000</Text>
-            <Text style={styles.savingsTotal}>/$8000</Text>
-          </View>
-
-          <Text style={styles.cardDescription}>
-            Establece{" "}
-            <Text style={styles.highlightText}>objetivos de ahorro</Text> para
-            este mes y te ayudaremos a mantener el rumbo.{" "}
-            <Text style={styles.highlightText}>¡Tú puedes!</Text>
-          </Text>
-
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={navigateToAddGoal}
-          >
-            <Feather name="edit-2" size={18} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Agregar meta del mes</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.viewAllButton}
-            onPress={navigateToAllGoals}
-          >
-            <Text style={styles.viewAllText}>Ver todas mis metas</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Tarjeta de metas */}
+        <SavingsCard email={email} onViewAllPress={navigateToAllGoals} />
       </ScrollView>
     </View>
   );
@@ -192,15 +117,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#363E40",
-  },
-  loadingContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    color: "#FFFFFF",
-    marginTop: 12,
-    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -271,10 +187,6 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
   },
-  incomeButton: {
-    backgroundColor: "#1E2429",
-    marginBottom: 0,
-  },
   addButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
@@ -284,6 +196,10 @@ const styles = StyleSheet.create({
   expenseText: {
     color: "#FF6B6B",
     fontFamily: "SpaceGroteskBold",
+  },
+  incomeButton: {
+    backgroundColor: "#1E2429",
+    marginBottom: 0,
   },
   incomeText: {
     color: "#4CD964",
@@ -327,57 +243,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "SpaceGroteskBold",
-  },
-  savingsContainer: {
-    marginVertical: 24,
-    alignItems: "center",
-    position: "relative",
-  },
-  savingsProgressBar: {
-    width: "100%",
-    height: 12,
-    backgroundColor: "#4A4A4A",
-    borderRadius: 6,
-  },
-  savingsProgressInner: {
-    width: "0%", // Ajustar según el progreso real
-    height: "100%",
-    backgroundColor: "#4CD964",
-    borderRadius: 6,
-  },
-  trophyContainer: {
-    position: "absolute",
-    bottom: -12,
-    backgroundColor: "#2A3038",
-    borderRadius: 20,
-    padding: 4,
-  },
-  savingsAmountContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "baseline",
-    marginBottom: 8,
-  },
-  savingsAmount: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    fontWeight: "bold",
-    fontFamily: "SpaceGroteskBold",
-  },
-  savingsTotal: {
-    color: "#AAAAAA",
-    fontSize: 18,
-    fontFamily: "SpaceGroteskRegular",
-  },
-  viewAllButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-  },
-  viewAllText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontFamily: "SpaceGroteskRegular",
   },
 });
 
