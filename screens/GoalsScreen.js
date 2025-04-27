@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -13,10 +13,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { Feather } from "@expo/vector-icons";
 import Header from "../components/Header";
 import SavingsCard from "../components/SavingsCard";
+import EditGoalsActionSheet from "../components/EditGoalsActionSheet";
 
 const GoalsScreen = () => {
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
+  const editSheetRef = useRef();
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -60,9 +62,17 @@ const GoalsScreen = () => {
     },
   ];
 
-  const editAllGoals = () => {
-    Alert.alert("Editar metas de ahorro", "Navegar a edición de metas");
+  // Abre el action sheet de metas
+  const openEditGoals = () => editSheetRef.current?.show();
+
+  const onEdit = () => {
+    Alert.alert("Éxito", "¡Meta guardada exitosamente!");
   };
+  const onAddNew = () => {
+    Alert.alert("Éxito", "¡Meta guardada exitosamente!");
+  };
+
+  const onCancel = () => {};
 
   return (
     <View style={styles.container}>
@@ -80,7 +90,6 @@ const GoalsScreen = () => {
         {/* Otras metas de ahorro */}
         <View style={styles.dashboardCard}>
           <Text style={styles.cardTitle}>Otras metas de ahorro</Text>
-
           {goals.map((goal, idx) => {
             const percent = Math.min(
               (goal.savedAmount / goal.goalAmount) * 100,
@@ -111,13 +120,24 @@ const GoalsScreen = () => {
           })}
         </View>
 
-        {/* Total de metas y botón fuera de la card */}
+        {/* Total de metas y botón de editar metas */}
         <Text style={styles.totalText}>Total de metas: {goals.length}</Text>
-        <TouchableOpacity style={styles.editGoalsButton} onPress={editAllGoals}>
+        <TouchableOpacity
+          style={styles.editGoalsButton}
+          onPress={openEditGoals}
+        >
           <Feather name="edit-2" size={18} color="#000000" />
           <Text style={styles.editGoalsButtonText}>Editar metas de ahorro</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Action Sheet para editar metas */}
+      <EditGoalsActionSheet
+        ref={editSheetRef}
+        onEdit={onEdit}
+        onAddNew={onAddNew}
+        onCancel={onCancel}
+      />
     </View>
   );
 };
