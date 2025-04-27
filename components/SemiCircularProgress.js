@@ -9,7 +9,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
  */
 const SemiCircularProgress = ({ progress = 0, size = 160 }) => {
   const radius = size / 2;
-  const strokeWidth = 14;
+  const strokeWidth = 16;
   const normalizedProgress = Math.min(Math.max(progress, 0), 100);
 
   // Semicírculo de fondo: de 180° (izquierda) a 360° (derecha)
@@ -31,7 +31,8 @@ const SemiCircularProgress = ({ progress = 0, size = 160 }) => {
   );
 
   const trophySize = 24;
-  const trophyOffset = radius - trophySize;
+  // Ajuste para acercar el trofeo al arco
+  const trophyOffset = radius - trophySize - strokeWidth / 2 - 8;
 
   return (
     <View style={styles.container}>
@@ -48,14 +49,12 @@ const SemiCircularProgress = ({ progress = 0, size = 160 }) => {
             stroke="#4A4A4A"
             strokeWidth={strokeWidth}
             fill="none"
-            strokeLinecap="round"
           />
           <Path
             d={arcProgress}
             stroke="#B6F2DC"
             strokeWidth={strokeWidth}
             fill="none"
-            strokeLinecap="round"
           />
         </Svg>
         <View style={[styles.trophyContainer, { top: trophyOffset }]}>
