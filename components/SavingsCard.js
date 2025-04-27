@@ -9,14 +9,17 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { useIsFocused } from "@react-navigation/native";
 import SemiCircularProgress from "./SemiCircularProgress";
 import AddGoalActionSheet from "./AddGoalActionSheet";
 
 /**
  * SavingsCard muestra la meta de ahorro mensual.
  * @param showViewAll: si es true, muestra el botón "Ver todas mis metas".
+ * Se recarga cada vez que la pantalla está enfocada.
  */
 const SavingsCard = ({ email, onViewAllPress, showViewAll = true }) => {
+  const isFocused = useIsFocused();
   const [meta, setMeta] = useState(null);
   const progressAnim = useRef(new Animated.Value(0)).current;
   const [progressValue, setProgressValue] = useState(0);
@@ -40,9 +43,10 @@ const SavingsCard = ({ email, onViewAllPress, showViewAll = true }) => {
     }
   };
 
+  // Recarga la meta cada vez que el screen obtiene foco o cambia el email
   useEffect(() => {
-    fetchMeta();
-  }, [email]);
+    if (isFocused) fetchMeta();
+  }, [email, isFocused]);
 
   useEffect(() => {
     const id = progressAnim.addListener(({ value }) => setProgressValue(value));
@@ -70,11 +74,12 @@ const SavingsCard = ({ email, onViewAllPress, showViewAll = true }) => {
         </Text>
       </View>
 
-      <Text style={styles.cardDescription}>
-        {meta
-          ? "¡Sigue así! Estás avanzando en tu meta de ahorro mensual."
-          : "Establece objetivos de ahorro para este mes y te ayudaremos a mantener el rumbo. ¡Tú puedes!"}
-      </Text>
+      {!meta && (
+        <Text style={styles.cardDescription}>
+          Establece objetivos de ahorro para este mes y te ayudaremos a mantener
+          el rumbo. ¡Tú puedes!
+        </Text>
+      )}
 
       <TouchableOpacity style={styles.addButton} onPress={openAddGoalSheet}>
         <Feather name="edit-2" size={18} color="#FFFFFF" />
@@ -112,9 +117,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 8,
     fontFamily: "SpaceGroteskBold",
+    textAlign: "center",
   },
   savingsContainer: {
-    marginVertical: 24,
+    marginTop: 10,
     alignItems: "center",
   },
   amountSection: {
@@ -143,10 +149,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1E2429",
-    borderRadius: 8,
-    padding: 12,
+    padding: 8,
     marginBottom: 12,
+    borderColor: "#FFFFFF",
+    borderWidth: 1,
+    borderRadius: 8,
   },
   addButtonText: {
     color: "#FFFFFF",
@@ -157,7 +164,10 @@ const styles = StyleSheet.create({
   viewAllButton: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
+    padding: 8,
+    borderColor: "#FFFFFF",
+    borderWidth: 1,
+    borderRadius: 8,
   },
   viewAllText: {
     color: "#FFFFFF",
