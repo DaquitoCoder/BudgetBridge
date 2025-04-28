@@ -1,3 +1,4 @@
+// screens/GoalsScreen.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -5,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
   Alert,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
@@ -14,11 +16,13 @@ import { Feather } from "@expo/vector-icons";
 import Header from "../components/Header";
 import SavingsCard from "../components/SavingsCard";
 import EditGoalsActionSheet from "../components/EditGoalsActionSheet";
+import OtherGoalsCard from "../components/OtherGoalsCard";
 
 const GoalsScreen = () => {
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
   const editSheetRef = useRef();
+  const otherRef = useRef();
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -28,50 +32,18 @@ const GoalsScreen = () => {
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync();
   }, [loaded, error]);
-
   if (!loaded && !error) return null;
 
-  const goals = [
-    {
-      title: "Viaje a Japón",
-      goalAmount: 15000000,
-      savedAmount: 5000000,
-      dateRange: "01/01/2025 - 31/12/2025",
-      category: "Viajes",
-    },
-    {
-      title: "Fondo de Emergencia",
-      goalAmount: 3000,
-      savedAmount: 1200,
-      dateRange: "01/03/2025 - Continuo",
-      category: "Seguridad Financiera",
-    },
-    {
-      title: "Curso de Programación",
-      goalAmount: 900,
-      savedAmount: 1500,
-      dateRange: "15/04/2025 - 30/06/2025",
-      category: "Educación",
-    },
-    {
-      title: "Nueva bicicleta",
-      goalAmount: 1500000,
-      savedAmount: 1100000,
-      dateRange: "01/05/2025 - 31/10/2025",
-      category: "Transporte",
-    },
-  ];
-
-  // Abre el action sheet de metas
   const openEditGoals = () => editSheetRef.current?.show();
 
   const onEdit = () => {
-    Alert.alert("Éxito", "¡Meta guardada exitosamente!");
+    Alert.alert("¡Éxito!", "Meta guardada exitosamente");
+    otherRef.current?.reload();
   };
   const onAddNew = () => {
-    Alert.alert("Éxito", "¡Meta guardada exitosamente!");
+    Alert.alert("¡Éxito!", "Meta agregada exitosamente");
+    otherRef.current?.reload();
   };
-
   const onCancel = () => {};
 
   return (
@@ -88,50 +60,18 @@ const GoalsScreen = () => {
         />
 
         {/* Otras metas de ahorro */}
-        <View style={styles.dashboardCard}>
-          <Text style={styles.cardTitle}>Otras metas de ahorro</Text>
-          {goals.map((goal, idx) => {
-            const percent = Math.min(
-              (goal.savedAmount / goal.goalAmount) * 100,
-              100
-            );
-            return (
-              <View key={idx} style={styles.goalItem}>
-                <Text style={styles.goalTitle}>{goal.title}</Text>
-                <View style={styles.progressRow}>
-                  <View style={styles.progressBarContainer}>
-                    <View
-                      style={[styles.progressBarFill, { width: `${percent}%` }]}
-                    />
-                  </View>
-                  <Text style={styles.progressLabel}>
-                    ${goal.savedAmount.toLocaleString()} / $
-                    {goal.goalAmount.toLocaleString()}
-                  </Text>
-                </View>
-                <Text style={styles.goalDetails}>
-                  Rango de tiempo: {goal.dateRange}
-                </Text>
-                <Text style={styles.goalDetails}>
-                  Categoría: {goal.category}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        <OtherGoalsCard ref={otherRef} email={email} />
 
-        {/* Total de metas y botón de editar metas */}
-        <Text style={styles.totalText}>Total de metas: {goals.length}</Text>
+        {/* Total y botón */}
         <TouchableOpacity
           style={styles.editGoalsButton}
           onPress={openEditGoals}
         >
-          <Feather name="edit-2" size={18} color="#000000" />
+          <Feather name="edit-2" size={18} color="#000" />
           <Text style={styles.editGoalsButtonText}>Editar metas de ahorro</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Action Sheet para editar metas */}
       <EditGoalsActionSheet
         ref={editSheetRef}
         onEdit={onEdit}
@@ -146,55 +86,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#363E40" },
   content: { flex: 1, padding: 16 },
   pageTitle: {
-    color: "#FFFFFF",
+    color: "#FFF",
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: "SpaceGroteskBold",
     marginBottom: 16,
-    fontFamily: "SpaceGroteskBold",
-  },
-  dashboardCard: {
-    backgroundColor: "#2A3038",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-    fontFamily: "SpaceGroteskBold",
-  },
-  goalItem: { marginBottom: 16 },
-  goalTitle: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "SpaceGroteskBold",
-    marginBottom: 4,
-  },
-  progressRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  progressBarContainer: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "#4A4A4A",
-    borderRadius: 4,
-    overflow: "hidden",
-    marginRight: 8,
-  },
-  progressBarFill: { height: "100%", backgroundColor: "#B6F2DC" },
-  progressLabel: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontFamily: "SpaceGroteskRegular",
-  },
-  goalDetails: { color: "#AAAAAA", fontSize: 12, marginBottom: 4 },
-  totalText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontFamily: "SpaceGroteskBold",
-    textAlign: "right",
-    marginBottom: 8,
   },
   editGoalsButton: {
     flexDirection: "row",
@@ -206,7 +101,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   editGoalsButtonText: {
-    color: "#000000",
+    color: "#000",
     fontSize: 16,
     marginLeft: 8,
     fontFamily: "SpaceGroteskRegular",

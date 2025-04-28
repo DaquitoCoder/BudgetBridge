@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, useRef } from "react";
+import React, { useState, useImperativeHandle, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import ActionSheet from "react-native-actions-sheet";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import * as SplashScreen from "expo-splash-screen";
 import { Feather } from "@expo/vector-icons";
 import {
   getDocs,
@@ -21,13 +22,23 @@ import {
   setDoc,
   addDoc,
 } from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
+import { useFonts } from "expo-font";
+
+// Formatea números con puntos de miles
+const formatWithDots = (value) => {
+  const numeric = value.replace(/\D/g, "");
+  return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
 
 const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
   const sheetRef = useRef();
+  const { currentUser } = useAuth();
+  const userEmail = currentUser?.email || "";
+
   const [mode, setMode] = useState("add");
   const [goalId, setGoalId] = useState(null);
-
   const [categories, setCategories] = useState([]);
   const frequencies = [
     "Diario",
@@ -39,7 +50,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
     "Anual",
   ];
 
-  // form state
+  // Form state
   const [category, setCategory] = useState("");
   const [startDateObj, setStartDateObj] = useState(null);
   const [hasEnd, setHasEnd] = useState(false);
@@ -55,13 +66,23 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Carga de fuentes
+  const [loaded, error] = useFonts({
+    SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
+    SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
+  });
+  useEffect(() => {
+    if (loaded || error) SplashScreen.hideAsync();
+  }, [loaded, error]);
+
+  // Manejador imperativo
   useImperativeHandle(ref, () => ({
     show: async (_mode, id) => {
       setMode(_mode);
       setGoalId(id || null);
       setLoading(true);
 
-      // cargar categorías
+      // Cargar categorías de Firestore
       try {
         const snap = await getDocs(collection(db, "categoria"));
         setCategories(
@@ -89,15 +110,15 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
                 : new Date(d.fecha_final)
             );
             setFrequency(d.frecuencia || "");
-            setValueMeta(String(d.valor_meta));
-            setValueSaved(String(d.total_ahorrado));
+            setValueMeta(formatWithDots(String(d.valor_meta)));
+            setValueSaved(formatWithDots(String(d.total_ahorrado)));
             setName(d.nombre_meta || "");
           }
         } catch (e) {
           console.error("Error cargando meta para editar:", e);
         }
       } else {
-        // resetear formulario
+        // Resetear
         setCategory("");
         setStartDateObj(null);
         setHasEnd(false);
@@ -117,8 +138,8 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
 
   const toggle = (sec) => setOpenSection(openSection === sec ? null : sec);
 
+  // Guardar meta
   const handleSave = async () => {
-    // validación básica
     if (
       !category ||
       !startDateObj ||
@@ -137,15 +158,19 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
       return;
     }
 
+    const valor_meta_num = parseFloat(valueMeta.replace(/\./g, ""));
+    const total_ahorrado_num = parseFloat(valueSaved.replace(/\./g, ""));
+
     const payload = {
+      usuario_correo: userEmail,
       categoria: category,
       categoria_id: categoryId,
       fecha_inicio: startDateObj,
       tiene_final: hasEnd,
       fecha_final: hasEnd ? endDateObj : null,
       frecuencia: frequency,
-      valor_meta: parseFloat(valueMeta),
-      total_ahorrado: parseFloat(valueSaved),
+      valor_meta: valor_meta_num,
+      total_ahorrado: total_ahorrado_num,
       nombre_meta: name,
     };
 
@@ -156,7 +181,6 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
       } else {
         await addDoc(collection(db, "meta_ahorro"), payload);
       }
-      Alert.alert("¡Éxito!", "Meta guardada exitosamente.");
       onSave(payload, goalId);
       sheetRef.current?.hide();
     } catch (e) {
@@ -166,6 +190,8 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
       setSaving(false);
     }
   };
+
+  if (!loaded && !error) return null;
 
   return (
     <ActionSheet
@@ -192,7 +218,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
           />
         ) : (
           <>
-            {/* --- Categoría --- */}
+            {/* Categoría */}
             <TouchableOpacity
               style={styles.row}
               onPress={() => toggle("category")}
@@ -226,7 +252,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
                 </TouchableOpacity>
               ))}
 
-            {/* --- Duración --- */}
+            {/* Duración */}
             <TouchableOpacity
               style={styles.row}
               onPress={() => toggle("duration")}
@@ -282,7 +308,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
                   />
                 )}
 
-                {/* Checkbox fecha final */}
+                {/* Checkbox final */}
                 {startDateObj && (
                   <View style={styles.row}>
                     <Text style={styles.rowText}>Tiene fecha final</Text>
@@ -348,7 +374,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
               </View>
             )}
 
-            {/* --- Frecuencia --- */}
+            {/* Frecuencia */}
             <TouchableOpacity
               style={styles.row}
               onPress={() => toggle("frequency")}
@@ -382,32 +408,32 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
                 </TouchableOpacity>
               ))}
 
-            {/* --- Inputs --- */}
+            {/* Inputs */}
             <TextInput
               style={styles.input}
-              placeholder="Monto de la meta"
+              placeholder="Escribe el monto $$$ meta"
               placeholderTextColor="#ccc"
               keyboardType="numeric"
               value={valueMeta}
-              onChangeText={setValueMeta}
+              onChangeText={(t) => setValueMeta(formatWithDots(t))}
             />
             <TextInput
               style={styles.input}
-              placeholder="Total ahorrado"
+              placeholder="Escribe cuánto llevas ahorrado $$$"
               placeholderTextColor="#ccc"
               keyboardType="numeric"
               value={valueSaved}
-              onChangeText={setValueSaved}
+              onChangeText={(t) => setValueSaved(formatWithDots(t))}
             />
             <TextInput
               style={styles.input}
-              placeholder="Nombre de la meta"
+              placeholder="Escribe un nombre para tu meta"
               placeholderTextColor="#ccc"
               value={name}
               onChangeText={setName}
             />
 
-            {/* --- Botón principal con spinner --- */}
+            {/* Botón guardar */}
             <TouchableOpacity
               style={[styles.primaryButton, saving && { opacity: 0.6 }]}
               onPress={handleSave}
@@ -427,7 +453,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
               </Text>
             </TouchableOpacity>
 
-            {/* --- Botón cancelar --- */}
+            {/* Botón cancelar */}
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => {
@@ -454,7 +480,6 @@ const styles = StyleSheet.create({
   title: {
     color: "#FFF",
     fontSize: 18,
-    fontWeight: "bold",
     textAlign: "center",
     marginBottom: 16,
     fontFamily: "SpaceGroteskBold",
@@ -494,10 +519,16 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGroteskRegular",
   },
   input: {
-    backgroundColor: "#1E2429",
+    backgroundColor: "#242A2C",
     color: "#FFF",
+    borderColor: "#363E40",
+    borderWidth: 2,
     borderRadius: 8,
-    padding: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingLeft: 16,
+    paddingRight: 16,
+    fontSize: 16,
     marginBottom: 12,
     fontFamily: "SpaceGroteskRegular",
   },

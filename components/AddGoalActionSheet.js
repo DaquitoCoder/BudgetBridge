@@ -8,8 +8,10 @@ import {
   Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import * as SplashScreen from "expo-splash-screen";
 import ActionSheet from "react-native-actions-sheet";
 import { db } from "../firebase/config";
+import { useFonts } from "expo-font";
 import { collection, doc, setDoc, getDoc } from "firebase/firestore"; // Añadido getDoc
 
 const AddGoalActionSheet = React.forwardRef(
@@ -18,6 +20,17 @@ const AddGoalActionSheet = React.forwardRef(
     const [valorAhorrado, setValorAhorrado] = useState("");
     const [saving, setSaving] = useState(false);
     const internalRef = useRef();
+
+    const [loaded, error] = useFonts({
+      SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
+      SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
+    });
+
+    useEffect(() => {
+      if (loaded || error) {
+        SplashScreen.hideAsync();
+      }
+    }, [loaded, error]);
 
     useEffect(() => {
       if (meta) {
@@ -78,6 +91,8 @@ const AddGoalActionSheet = React.forwardRef(
         setSaving(false);
       }
     };
+
+    if (!loaded && !error) return null;
 
     return (
       <ActionSheet ref={internalRef} containerStyle={styles.sheetContainer}>

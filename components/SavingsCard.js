@@ -9,6 +9,8 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import { useIsFocused } from "@react-navigation/native";
 import SemiCircularProgress from "./SemiCircularProgress";
 import AddGoalActionSheet from "./AddGoalActionSheet";
@@ -24,6 +26,17 @@ const SavingsCard = ({ email, onViewAllPress, showViewAll = true }) => {
   const progressAnim = useRef(new Animated.Value(0)).current;
   const [progressValue, setProgressValue] = useState(0);
   const actionSheetRef = useRef();
+
+  const [loaded, error] = useFonts({
+    SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
+    SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
+  });
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
 
   const fetchMeta = async () => {
     if (!email) return;
@@ -54,6 +67,8 @@ const SavingsCard = ({ email, onViewAllPress, showViewAll = true }) => {
   }, [progressAnim]);
 
   const openAddGoalSheet = () => actionSheetRef.current?.show();
+
+  if (!loaded && !error) return null;
 
   return (
     <View style={styles.card}>

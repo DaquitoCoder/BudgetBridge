@@ -9,6 +9,8 @@ import {
 import ActionSheet from "react-native-actions-sheet";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import AddEditGoalActionSheet from "./AddEditGoalActionSheet";
 
 /**
@@ -24,6 +26,17 @@ const EditGoalsActionSheet = React.forwardRef(
     const [selectedId, setSelectedId] = useState(null);
     const sheetRef = useRef();
     const addEditRef = useRef();
+
+    const [loaded, error] = useFonts({
+      SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
+      SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
+    });
+
+    useEffect(() => {
+      if (loaded || error) {
+        SplashScreen.hideAsync();
+      }
+    }, [loaded, error]);
 
     useImperativeHandle(ref, () => ({
       show: async () => {
@@ -67,6 +80,8 @@ const EditGoalsActionSheet = React.forwardRef(
       else onAddNew?.(data);
       sheetRef.current?.hide();
     };
+
+    if (!loaded && !error) return null;
 
     return (
       <>
