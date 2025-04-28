@@ -14,6 +14,7 @@ import WelcomeScreen from "../screens/WelcomeScreen";
 import SpendManagementScreen from "../screens/SpendManagementScreen";
 import CustomDrawer from "../components/CustomDrawer";
 import GoalsScreen from "../screens/GoalsScreen";
+import NotificationsScreen from "../screens/NotificationsScreen";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -50,6 +51,23 @@ const AuthStack = () => {
     </Stack.Navigator>
   );
 };
+
+const NotificationsDrawer = () => (
+  <Drawer.Navigator
+    id="NotificationsDrawer"
+    drawerContent={() => <NotificationsScreen />}
+    screenOptions={{
+      headerShown: false,
+      drawerPosition: "right", // Menú izquierdo para notificaciones
+      drawerStyle: {
+        width: "80%",
+        backgroundColor: "#363e40",
+      },
+    }}
+  >
+    <Drawer.Screen name="MainDrawer" component={MainDrawer} />
+  </Drawer.Navigator>
+);
 
 // Navegación principal con drawer para usuarios autenticados
 const MainDrawer = () => {
@@ -127,7 +145,7 @@ export const AppNavigator = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#1E2429" />
       <NavigationContainer>
-        {isAuthenticated ? <MainDrawer /> : <AuthStack />}
+        {isAuthenticated ? <NotificationsDrawer /> : <AuthStack />}
       </NavigationContainer>
     </SafeAreaView>
   );
