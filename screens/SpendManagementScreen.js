@@ -14,6 +14,11 @@ import Header from "../components/Header";
 import { useFonts } from "expo-font";
 
 export default function App() {
+  const { currentUser } = useAuth();
+  const email = currentUser?.email || "";
+  const editSheetRef = useRef();
+  const otherRef = useRef();
+
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
     SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
@@ -24,6 +29,13 @@ export default function App() {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
+
+  const onAddNew = () => {
+    Alert.alert("¡Éxito!", "Meta agregada exitosamente");
+    otherRef.current?.reload();
+  };
+  
+  const openAddSpend = () => editSheetRef.current?.show();
 
   const [expenses, setExpenses] = useState([
     {
