@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,19 +7,28 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  Alert,
 } from "react-native";
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
 import Header from "../components/Header";
 import { useFonts } from "expo-font";
+import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { db } from "../firebase/config";
+import { useAuth } from "../contexts/AuthContext";
+import AddSpendActionSheet from "../components/AddSpendActionSheet";
+
 
 export default function App() {
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
+  const [spends, setSpends] = useState([]);
   const editSheetRef = useRef();
   const otherRef = useRef();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null)
 
-  const [loaded, error] = useFonts({
+  const [loaded, fontError] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
     SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
   });
@@ -30,88 +39,62 @@ export default function App() {
     }
   }, [loaded, error]);
 
-  const onAddNew = () => {
-    Alert.alert("¡Éxito!", "Meta agregada exitosamente");
-    otherRef.current?.reload();
-  };
-  
-  const openAddSpend = () => editSheetRef.current?.show();
+  useEffect(() => {
+    fetchSpends()
+  }, [])
 
-  const [expenses, setExpenses] = useState([
-    {
-      id: 1,
-      name: "Almuerzo universitario",
-      amount: 12000,
-      category: "Comida",
-      date: "05/02/2025",
-    },
-    {
-      id: 2,
-      name: "Recarga transporte",
-      amount: 10000,
-      category: "Transporte",
-      date: "06/02/2025",
-    },
-    {
-      id: 3,
-      name: "Café y snack",
-      amount: 8000,
-      category: "Comida",
-      date: "06/02/2025",
-    },
-    {
-      id: 4,
-      name: "Cuaderno nuevo",
-      amount: 12000,
-      category: "Varios",
-      date: "07/02/2025",
-    },
-    {
-      id: 5,
-      name: "Galletas y jugo",
-      amount: 7000,
-      category: "Comida",
-      date: "09/02/2025",
-    },
-  ]);
+  const fetchSpends = async () => {
+    try {
+      setLoading(true);
+      const spendsRef = collection(db, "gestion_gasto");
+      const q = query(spendsRef, orderBy("date", "desc"));
+      
+      const querySnapshot = await getDocs(q)
+      const spendsData = []
 
-  const handleAddExpense = () => {
-    if (!name || !amount || !category || !date) {
-      alert("Por favor complete todos los campos.");
-      return;
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        spendsData.push({
+          id: doc.id,
+          name: data.name,
+          amount: data.amount,
+          category: data.category,
+          date: data.date,
+        })
+      })
+      
+
+      setSpends(spendsData)
+      setError(null)
+    } catch (err) {
+      console.error("Error fetching spends:", err)
+      setError("Error al cargar los gastos")
+      Alert.alert("Error", "No se pudieron cargar los gastos")
+    } finally {
+      setLoading(false)
     }
+  }
 
-    setIsSubmitting(true);
+  const onAddNew = () => {
+    Alert.alert("¡Éxito!", "Gasto agregado exitosamente")
+    fetchSpends() // Recargar los gastos después de agregar uno nuevo
+    otherRef.current?.reload()
+  }
+  
+  const onCancel = () => {};
 
-    const newRecipe = {
-      strMeal: mealName,
-      strCategory: category,
-      strInstructions: instructions,
-      ingredients: ingredients,
-      strMealThumb: imageUri || "",
-    };
-
-    push(dbRef(database, "/userRecipes"), newRecipe)
-      .then(() => {
-        alert("Receta creada con éxito");
-        setMealName("");
-        setCategory("");
-        setInstructions("");
-        setIngredients([""]);
-        setImageUri(null);
-      })
-      .catch((error) => {
-        console.error("Error al crear receta: ", error);
-        alert("Hubo un error al crear la receta.");
-      })
-      .finally(() => setIsSubmitting(false));
+  const openAddSpend = () => {
+    if (editSheetRef.current) {
+      editSheetRef.current.show();
+    }
   };
 
-  const totalMonth = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  // Calcular el total del mes
+  const totalMonth = spends.reduce((sum, spends) => sum + spends.amount, 0)
 
   const formatCurrency = (amount) => {
-    return `$${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-  };
+    return `$${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
+  }
 
   if (!loaded && !error) {
     return null;
@@ -140,27 +123,45 @@ export default function App() {
           </TouchableOpacity>
         </View>
 
-        {/* Expenses List */}
+        {/* Spends List */}
         <View style={styles.dashboardCard}>
           <Text style={styles.sectionTitle}>Gastos recientes</Text>
-          <ScrollView style={styles.expensesList}>
-            {expenses.map((expense) => (
-              <View key={expense.id} style={styles.expenseItem}>
-                <View style={styles.expenseRow}>
-                  <Text style={styles.expenseName}>{expense.name}</Text>
-                  <Text style={styles.expenseAmount}>
-                    {formatCurrency(expense.amount)}
-                  </Text>
+
+          {loading ? (
+            // Mostrar indicador de carga mientras se obtienen los datos
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Cargando gastos...</Text>
+            </View>
+          ) : error ? (
+            // Mostrar mensaje de error si hay un problema
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={fetchSpends}>
+                <Text style={styles.retryButtonText}>Reintentar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : spends.length === 0 ? (
+            // Mostrar mensaje si no hay gastos
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No hay gastos registrados</Text>
+            </View>
+          ) : (
+            // Mostrar la lista de gastos
+            <ScrollView style={styles.spendsList}>
+              {spends.map((spends) => (
+                <View key={spends.id} style={styles.spendsItem}>
+                  <View style={styles.spendsRow}>
+                    <Text style={styles.spendsName}>{spends.name}</Text>
+                    <Text style={styles.spendsAmount}>{formatCurrency(spends.amount)}</Text>
+                  </View>
+                  <View style={styles.spendsDetails}>
+                    <Text style={styles.spendsCategory}>Categoría: {spends.category}</Text>
+                    <Text style={styles.spendsDate}>{spends.date}</Text>
+                  </View>
                 </View>
-                <View style={styles.expenseDetails}>
-                  <Text style={styles.expenseCategory}>
-                    Categoría: {expense.category}
-                  </Text>
-                  <Text style={styles.expenseDate}>{expense.date}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Total */}
@@ -170,13 +171,17 @@ export default function App() {
         </View>
 
         {/* Add Button */}
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={styles.addButton} onPress={openAddSpend}>
           <Feather name="plus" size={20} color="black" />
           <Text style={styles.addButtonText}>Agregar gasto</Text>
         </TouchableOpacity>
       </View>
+      <AddSpendActionSheet 
+      ref={editSheetRef} 
+      onAdd={onAddNew} 
+      onCancel={onCancel}/>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -249,40 +254,40 @@ const styles = StyleSheet.create({
     color: "white",
     marginBottom: 12,
   },
-  expensesList: {
+  spendsList: {
     flex: 1,
   },
-  expenseItem: {
+  spendsItem: {
     borderBottomWidth: 1,
     borderBottomColor: "#1E1E1E",
     paddingBottom: 12,
     marginBottom: 12,
   },
-  expenseRow: {
+  spendsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  expenseName: {
+  spendsName: {
     color: "white",
     fontWeight: "500",
     fontSize: 16,
   },
-  expenseAmount: {
+  spendsAmount: {
     color: "white",
     fontWeight: "500",
     fontSize: 16,
   },
-  expenseDetails: {
+  spendsDetails: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 4,
   },
-  expenseCategory: {
+  spendsCategory: {
     color: "#9E9E9E",
     fontSize: 14,
   },
-  expenseDate: {
+  spendsDate: {
     color: "#9E9E9E",
     fontSize: 14,
   },
@@ -325,5 +330,53 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    flex: 1,
   },
-});
+  // Nuevos estilos para estados de carga y error
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
+    color: "white",
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    color: "#FF6B6B",
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#2A3038",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#8CE3C3",
+  },
+  retryButtonText: {
+    color: "#8CE3C3",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyText: {
+    color: "#9E9E9E",
+    fontSize: 16,
+    textAlign: "center",
+  },
+})

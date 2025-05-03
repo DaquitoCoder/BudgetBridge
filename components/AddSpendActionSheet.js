@@ -28,8 +28,8 @@ const formatWithDots = (value) => {
   return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 };
 
-const AddGoalActionSheet = React.forwardRef(
-  ({ email, gasto, onSaveSuccess }, ref) => {
+const AddSpendActionSheet = React.forwardRef(
+  ({ email, gasto, onSaveSuccess, onCancel }, ref) => {
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState("");
     const [montoGasto, setMontoGasto] = useState("");
@@ -40,7 +40,7 @@ const AddGoalActionSheet = React.forwardRef(
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const internalRef = useRef();
-
+    
     const [loaded, error] = useFonts({
       SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
       SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
@@ -113,10 +113,11 @@ const AddGoalActionSheet = React.forwardRef(
         const gastoRef = doc(collection(db, "gestion_gasto"), email);
    
         await setDoc(gastoRef, {
-          gategoria: category,
-          monto_gasto: parseFloat(montoGasto),
-          nombre_gasto: nombreGasto,
-          usuario_email: email,
+          amount: parseFloat(montoGasto),
+          name: nombreGasto,
+          category: category,
+          usuario: email,
+          date: new Date(),
         });
 
         Alert.alert("Éxito", "¡Gasto guardado exitosamente!");
@@ -131,11 +132,26 @@ const AddGoalActionSheet = React.forwardRef(
       }
     };
 
+    useEffect(() => {
+  if (initialData) {
+    setName(initialData.name);
+    setAmount(initialData.amount);
+    setCategory(initialData.category);
+    setDate(initialData.date);
+  } else {
+    // limpiar campos para un nuevo gasto
+    setName('');
+    setAmount('');
+    setCategory('');
+    setDate('');
+  }
+}, [initialData]);
+
     if (!loaded && !error) return null;
 
     return (
-      <ActionSheet ref={sheetRef}
-        containerStyle={styles.sheet}
+      <ActionSheet ref={internalRef}
+        containerStyle={styles.sheetContainer}
         keyboardHandlerEnabled={false}
         maskEnabled={false}
         closeOnDragDown={false}
@@ -194,7 +210,7 @@ const AddGoalActionSheet = React.forwardRef(
             placeholder="Escribe el monto gastado $$$"
             placeholderTextColor="#ccc"
             keyboardType="numeric"
-            value={valorMeta}
+            value={montoGasto}
             onChangeText={setMontoGasto}
           />
 
@@ -202,13 +218,13 @@ const AddGoalActionSheet = React.forwardRef(
             style={styles.input}
             placeholder="Describe en que gastaste el dinero"
             placeholderTextColor="#ccc"
-            value={valorAhorrado}
+            value={nombreGasto}
             onChangeText={setNombreGasto}
           />
 
           <TouchableOpacity
             style={styles.addButton}
-            onPress={handleSaveGoal}
+            onPress={handleSaveSpend}
             disabled={saving}
           >
             <Feather name="plus" size={18} color="#1E2429" />
@@ -316,3 +332,6 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGroteskRegular",
   },
 });
+
+
+export default AddSpendActionSheet;
