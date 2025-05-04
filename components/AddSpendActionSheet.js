@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
+  ActivityIndicator
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
@@ -29,12 +31,14 @@ const formatWithDots = (value) => {
 };
 
 const AddSpendActionSheet = React.forwardRef(
-  ({ email, gasto, onSaveSuccess, onCancel }, ref) => {
+  ({ gasto, onSaveSuccess, onCancel }, ref) => {
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState("");
-    const [montoGasto, setMontoGasto] = useState("");
-    const [nombreGasto, setNombreGasto] = useState("");
+    const [amount, setAmount] = useState("");
+    const [name, setName] = useState("");
     const [fecha, setFecha] = useState("");
+    const { currentUser } = useAuth();
+    const email = currentUser?.email || "";
 
     const [openSection, setOpenSection] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -54,100 +58,102 @@ const AddSpendActionSheet = React.forwardRef(
 
     useEffect(() => {
       if (gasto) {
-        setMontoGasto(gasto.montoGasto.toString());
-        setNombreGasto(gasto.nombreGasto);
+        setAmount(gasto.amount.toString());
+        setName(gasto.name);
       }
     }, [gasto]);
 
     useImperativeHandle(ref, () => ({
       show: async () => {
+        
         setLoading(true);
-        if (!email) return;
 
         try {
-          const snap = await getDocs(collection(db, "categoria"));
+          const snap = await getDocs(collection(db, "categoria")).catch(e => {
+            console.error("[Error] En getDocs(categoria):", e);
+            throw e;
+          });
+
           setCategories(
             snap.docs.map((d) => ({ id: d.id, nombre: d.data().nombre }))
           );
+
         } catch (e) {
           console.error("Error cargando categorías:", e);
+        } finally {
+          setLoading(false);
         }
-
-        try {
-          const docRef = doc(db, "gestion_gasto", email);
-          const docSnap = await getDoc(docRef);
     
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setMontoGasto(String(data.montoGasto));
-            setNombreGasto(String(data.nombreGasto));
-          } else {
-            setMontoGasto("");
-            setNombreGasto("");
-          }
-          internalRef.current?.show();
-        } catch (err) {
-          console.error("Error cargando datos para edición:", err);
-        }
+        internalRef.current?.show();
       },
       hide: () => {
         internalRef.current?.hide();
       },
+      reload: () => {
+        setCategory("");
+        setAmount("");
+        setName("");
+        setFecha("");
+      }
     }));
 
     const handleSaveSpend = async () => {
-      if (!montoGasto || !nombreGasto) {
-        Alert.alert("Error", "Por favor llena ambos campos");
+      if (!amount || !name || !category) {
+        Alert.alert("Error", "Completa todos los campos");
         return;
       }
     
-      const categoryId = categories.find((c) => c.nombre === category)?.id;
-      if (!categoryId) {
-        Alert.alert("Error", "Selecciona una categoría válida.");
-        return;
-      }
-
-
       try {
         setSaving(true);
-        const gastoRef = doc(collection(db, "gestion_gasto"), email);
-   
-        await setDoc(gastoRef, {
-          amount: parseFloat(montoGasto),
-          name: nombreGasto,
+        
+        // Guardar como nuevo documento en la colección (auto-ID)
+        await addDoc(collection(db, "gestion_gasto"), {
+          usuario: email,  // Campo separado (no como ID)
+          amount: parseFloat(amount),
+          name: name,
           category: category,
-          usuario: email,
-          date: new Date(),
+          date: new Date()  // Fecha actual automática
         });
-
-        Alert.alert("Éxito", "¡Gasto guardado exitosamente!");
-
-        ref?.current?.hide();
-        onSaveSuccess?.();
+    
+        Alert.alert("Éxito", "Gasto registrado");
+        internalRef.current?.hide();
+        onSaveSuccess?.(); // Recargar la lista de gastos
       } catch (error) {
-        console.error("Error al guardar el gasto:", error);
-        Alert.alert("Error", "Hubo un problema al guardar el gasto");
+        console.error("Error guardando:", error);
+        Alert.alert("Error", "No se pudo guardar. Error: " + error.message);
       } finally {
         setSaving(false);
       }
     };
 
     useEffect(() => {
-  if (initialData) {
-    setName(initialData.name);
-    setAmount(initialData.amount);
-    setCategory(initialData.category);
-    setDate(initialData.date);
-  } else {
-    // limpiar campos para un nuevo gasto
-    setName('');
-    setAmount('');
-    setCategory('');
-    setDate('');
-  }
-}, [initialData]);
+      if (gasto) {
+        setAmount(gasto.amount?.toString() || '');
+        setName(gasto.name || '');
+        setCategory(gasto.category || '');
+        setFecha(gasto.date ? formatDate(gasto.date) : '');
+      } else {  
+        setAmount('');
+        setName('');
+        setCategory('');
+        setFecha('');
+      }
+    }, [gasto]);
+
+    const toggle = (section) => {
+      setOpenSection(openSection === section ? null : section);
+    };
 
     if (!loaded && !error) return null;
+
+    const formatDate = (date) => {
+      return date.toLocaleDateString('es-ES');
+    };
+
+    //BORRAR AHORITA
+    useEffect(() => {
+      console.log("ActionSheet montado"); // Debe aparecer en consola al cargar la pantalla
+    }, []);
 
     return (
       <ActionSheet ref={internalRef}
@@ -210,16 +216,16 @@ const AddSpendActionSheet = React.forwardRef(
             placeholder="Escribe el monto gastado $$$"
             placeholderTextColor="#ccc"
             keyboardType="numeric"
-            value={montoGasto}
-            onChangeText={setMontoGasto}
+            value={amount}
+            onChangeText={setAmount}
           />
 
           <TextInput
             style={styles.input}
             placeholder="Describe en que gastaste el dinero"
             placeholderTextColor="#ccc"
-            value={nombreGasto}
-            onChangeText={setNombreGasto}
+            value={name}
+            onChangeText={setName}
           />
 
           <TouchableOpacity

@@ -13,20 +13,33 @@ import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
 import Header from "../components/Header";
 import { useFonts } from "expo-font";
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore"
 import { db } from "../firebase/config";
 import { useAuth } from "../contexts/AuthContext";
 import AddSpendActionSheet from "../components/AddSpendActionSheet";
+import FilterSpendsActionSheet from '../components/FilterSpendsActionSheet';
 
 
-export default function App() {
+export default function SpendManagementScreen() {
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
   const [spends, setSpends] = useState([]);
-  const editSheetRef = useRef();
+  const addSheetRef  = useRef();
   const otherRef = useRef();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null)
+  const [filters, setFilters] = useState({
+    category: null,
+    minAmount: null,
+    maxAmount: null
+  });
+  const filterSheetRef = useRef();
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('es-ES');
+  };
 
   const [loaded, fontError] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -47,46 +60,80 @@ export default function App() {
     try {
       setLoading(true);
       const spendsRef = collection(db, "gestion_gasto");
-      const q = query(spendsRef, orderBy("date", "desc"));
+      let q = query(
+        spendsRef, 
+        where("usuario", "==", email), // Filtro por usuario
+        orderBy("amount"),
+        orderBy("date", "desc")
+      );
       
-      const querySnapshot = await getDocs(q)
-      const spendsData = []
+      // Aplicar filtros dinámicos
+      if (filters.category) {
+        q = query(q, where("category", "==", filters.category));
+      }
+      if (filters.minAmount || filters.maxAmount) {
+        // Aplica ambos filtros de monto juntos
+        q = query(
+          q,
+          where("amount", ">=", filters.minAmount || 0),
+          where("amount", "<=", filters.maxAmount || Infinity)
+        );
+      }
+
+      const querySnapshot = await getDocs(q);
+      const spendsData = [];
 
       querySnapshot.forEach((doc) => {
-        const data = doc.data()
+        const data = doc.data();
         spendsData.push({
           id: doc.id,
           name: data.name,
           amount: data.amount,
           category: data.category,
-          date: data.date,
-        })
-      })
-      
-
-      setSpends(spendsData)
-      setError(null)
+          date: formatDate(data.date), // Formatear fecha
+        });
+      });
+  
+      setSpends(spendsData);
+      setError(null);
     } catch (err) {
-      console.error("Error fetching spends:", err)
-      setError("Error al cargar los gastos")
-      Alert.alert("Error", "No se pudieron cargar los gastos")
+      console.error("Error fetching spends:", err);
+      setError("Error al cargar los gastos");
+      Alert.alert("Error", "No se pudieron cargar los gastos");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    fetchSpends();
+  }, [filters]);
 
   const onAddNew = () => {
-    Alert.alert("¡Éxito!", "Gasto agregado exitosamente")
-    fetchSpends() // Recargar los gastos después de agregar uno nuevo
-    otherRef.current?.reload()
-  }
+    Alert.alert("¡Éxito!", "Gasto agregado exitosamente");
+    fetchSpends(); // Recargar los gastos
+  };
   
   const onCancel = () => {};
 
-  const openAddSpend = () => {
-    if (editSheetRef.current) {
-      editSheetRef.current.show();
+  const openAddSpend2 = () => {
+    if (addSheetRef.current) {
+      addSheetRef.current.show();
     }
+  };
+
+  const openAddSpend = () => {
+    console.log("Botón presionado"); // Verifica si llega aquí
+    if (addSheetRef.current) {
+      console.log("Llamando a show()"); // Confirma que la referencia existe
+      addSheetRef.current.show();
+    } else {
+      console.error("addSheetRef.current es undefined");
+    }
+  };
+
+  const applyFilters = (newFilters) => {
+    setFilters(newFilters);
   };
 
   // Calcular el total del mes
@@ -112,7 +159,8 @@ export default function App() {
 
         {/* Filter Buttons */}
         <View style={styles.filterContainer}>
-          <TouchableOpacity style={styles.filterButton}>
+          <TouchableOpacity style={styles.filterButton}
+          onPress={() => filterSheetRef.current?.show()}>
             <Feather name="sliders" size={16} color="white" />
             <Text style={styles.filterText}>Filtrar por</Text>
           </TouchableOpacity>
@@ -148,15 +196,15 @@ export default function App() {
           ) : (
             // Mostrar la lista de gastos
             <ScrollView style={styles.spendsList}>
-              {spends.map((spends) => (
-                <View key={spends.id} style={styles.spendsItem}>
+              {spends.map((item) => (
+                <View key={item.id} style={styles.spendsItem}>
                   <View style={styles.spendsRow}>
-                    <Text style={styles.spendsName}>{spends.name}</Text>
-                    <Text style={styles.spendsAmount}>{formatCurrency(spends.amount)}</Text>
+                    <Text style={styles.spendsName}>{item.name}</Text>
+                    <Text style={styles.spendsAmount}>{formatCurrency(item.amount)}</Text>
                   </View>
                   <View style={styles.spendsDetails}>
-                    <Text style={styles.spendsCategory}>Categoría: {spends.category}</Text>
-                    <Text style={styles.spendsDate}>{spends.date}</Text>
+                    <Text style={styles.spendsCategory}>Categoría: {item.category}</Text>
+                    <Text style={styles.spendsDate}>{item.date}</Text>
                   </View>
                 </View>
               ))}
@@ -177,9 +225,15 @@ export default function App() {
         </TouchableOpacity>
       </View>
       <AddSpendActionSheet 
-      ref={editSheetRef} 
+      ref={addSheetRef} 
       onAdd={onAddNew} 
       onCancel={onCancel}/>
+      <FilterSpendsActionSheet
+      ref={filterSheetRef}
+      currentFilters={filters}
+      onApplyFilters={applyFilters}
+      categories={['Comida', 'Transporte', 'Entretenimiento', 'Servicios']} // Personaliza según tus categorías
+    />
     </SafeAreaView>
   )
 }
