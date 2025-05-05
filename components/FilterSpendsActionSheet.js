@@ -17,13 +17,21 @@ const FilterSpendsActionSheet = React.forwardRef(({
     }));
   };
 
+  React.useEffect(() => {
+    setTempFilters(currentFilters);
+  }, [currentFilters]);
+
   const resetFilters = () => {
-    setTempFilters({
+    const newFilters = {
       category: null,
       minAmount: null,
       maxAmount: null,
       dateRange: null
-    });
+    };
+
+    setTempFilters(newFilters);
+    onApplyFilters(newFilters); 
+    
   };
 
   return (
@@ -34,7 +42,11 @@ const FilterSpendsActionSheet = React.forwardRef(({
     >
       <View style={styles.header}>
         <Text style={styles.title}>Filtrar Gastos</Text>
-        <TouchableOpacity onPress={resetFilters}>
+        <TouchableOpacity onPress={() => {
+          resetFilters();
+          ref.current?.hide();
+        }}
+        >
           <Text style={styles.resetText}>Reiniciar</Text>
         </TouchableOpacity>
       </View>

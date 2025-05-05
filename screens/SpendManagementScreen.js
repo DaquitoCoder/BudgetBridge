@@ -56,6 +56,15 @@ export default function SpendManagementScreen() {
     fetchSpends()
   }, [])
 
+  useEffect(() => {
+    const initialFilters = {
+      category: null,
+      minAmount: null,
+      maxAmount: null
+    };
+    setFilters(initialFilters);
+  }, [])  
+
   const fetchSpends = async () => {
     try {
       setLoading(true);
@@ -111,24 +120,20 @@ export default function SpendManagementScreen() {
 
   const onAddNew = () => {
     Alert.alert("¡Éxito!", "Gasto agregado exitosamente");
+    const resetFilters = {
+      category: null,
+      minAmount: null,
+      maxAmount: null
+    };
+    setFilters(resetFilters);
     fetchSpends(); // Recargar los gastos
   };
   
   const onCancel = () => {};
 
-  const openAddSpend2 = () => {
-    if (addSheetRef.current) {
-      addSheetRef.current.show();
-    }
-  };
-
   const openAddSpend = () => {
-    console.log("Botón presionado"); // Verifica si llega aquí
     if (addSheetRef.current) {
-      console.log("Llamando a show()"); // Confirma que la referencia existe
       addSheetRef.current.show();
-    } else {
-      console.error("addSheetRef.current es undefined");
     }
   };
 

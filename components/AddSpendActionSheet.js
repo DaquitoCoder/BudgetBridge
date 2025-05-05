@@ -235,7 +235,7 @@ const AddSpendActionSheet = React.forwardRef(
           >
             <Feather name="plus" size={18} color="#1E2429" />
             <Text style={styles.addButtonText}>
-              {saving ? "Guardando..." : "+ Agregar gasto"}
+              {saving ? "Guardando..." : "Agregar gasto"}
             </Text>
           </TouchableOpacity>
 
