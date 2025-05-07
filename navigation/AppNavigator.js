@@ -15,6 +15,7 @@ import SpendManagementScreen from "../screens/SpendManagementScreen";
 import CustomDrawer from "../components/CustomDrawer";
 import GoalsScreen from "../screens/GoalsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
+import SuggestionsScreen from "../screens/SuggestionsScreen";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -109,6 +110,11 @@ const MainDrawer = () => {
         component={GoalsStack}
         options={{ title: "Metas de ahorro" }}
       />
+      <Drawer.Screen
+        name="SuggestionsScreen"
+        component={SuggestionsStack}
+        options={{ title: "Sugerencias" }}
+      />
     </Drawer.Navigator>
   );
 };
@@ -135,6 +141,12 @@ const SpendManagementStack = () => (
 const GoalsStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Goals" component={GoalsScreen} />
+  </Stack.Navigator>
+);
+
+const SuggestionsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Suggestions" component={SuggestionsScreen} />
   </Stack.Navigator>
 );
 

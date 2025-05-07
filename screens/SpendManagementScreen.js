@@ -270,7 +270,9 @@ export default function SpendManagementScreen() {
       ref={filterSheetRef}
       currentFilters={filters}
       onApplyFilters={applyFilters}
-      categories={['Comida', 'Transporte', 'Entretenimiento', 'Servicios']} // Personaliza según tus categorías
+      categories={['Ahorro', 'Casa', 'Diversión', 'Educación', 'Emergencia', 'Estudios', 
+        'Familia', 'Inversiones', 'Mobiliario', 'Tecnología', 'Trabajo',  'Retiro', 'Salud', 
+        'Viajes', 'Vivienda']} // Personaliza según tus categorías
       />
       <SortSpendsActionSheet
         ref={sortSheetRef}
