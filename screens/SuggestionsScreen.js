@@ -13,12 +13,120 @@ import { useAuth } from "../contexts/AuthContext";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import Header from "../components/Header";
+import { analyzeSpending, analyzeSavings } from "../components/FinancialAnalysis";
 
 const SuggestionsScreen = () => {
   const navigation = useNavigation();
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
+
+
+  useEffect(() => {
+    const generateSuggestions = async () => {
+      setLoading(true);
+      
+      try {
+        // 1. Analizar gastos
+        const spendingAnalysis = await analyzeSpending(currentUser.email);
+        
+        // 2. Analizar ahorros
+        const savingsAnalysis = await analyzeSavings(currentUser.email);
+        
+        // 3. Generar sugerencias basadas en el análisis
+        const generatedSuggestions = [];
+        
+        // Sugerencias basadas en gastos
+        if (spendingAnalysis.success) {
+          const { categoryAnalysis, monthlyComparison, spendingPatterns } = spendingAnalysis.data;
+          
+          // Sugerencia 1: Categoría con mayor gasto
+          if (categoryAnalysis.highestSpendingCategory) {
+            generatedSuggestions.push({
+              id: 1,
+              type: "gasto",
+              title: `Tu mayor gasto es en ${categoryAnalysis.highestSpendingCategory.category}`,
+              description: `El ${categoryAnalysis.highestSpendingCategory.percentage}% de tus gastos son en esta categoría. ¿Quieres revisar tus hábitos?`,
+              action: "Ver gastos",
+              icon: "alert-triangle",
+              color: "#D95F80",
+            });
+          }
+          
+          // Sugerencia 2: Comparación mensual
+          if (monthlyComparison.variation) {
+            const trend = monthlyComparison.variation > 0 ? "aumentado" : "disminuido";
+            generatedSuggestions.push({
+              id: 2,
+              type: "tendencia",
+              title: `Tus gastos han ${trend} un ${Math.abs(monthlyComparison.variation)}%`,
+              description: `Comparado con el mes anterior, has ${trend} tus gastos. ${monthlyComparison.variation > 0 ? "¿Quieres establecer un presupuesto?" : "¡Buen trabajo!"}`,
+              action: "Ver análisis",
+              icon: monthlyComparison.variation > 0 ? "trending-up" : "trending-down",
+              color: monthlyComparison.variation > 0 ? "#D95F80" : "#4CD964",
+            });
+          }
+          
+          // Sugerencia 3: Patrón de gasto
+          if (spendingPatterns.maxDay) {
+            generatedSuggestions.push({
+              id: 3,
+              type: "patrón",
+              title: `Gastas más los ${spendingPatterns.maxDay}`,
+              description: `Tus gastos son más altos a principios/mitad/fin de semana. ¿Quieres programar recordatorios?`,
+              action: "Ver patrones",
+              icon: "calendar",
+              color: "#7AB6DA",
+            });
+          }
+        }
+        
+        // Sugerencias basadas en ahorros
+        if (savingsAnalysis.success) {
+          const { goalsProgress, savingsGaps } = savingsAnalysis.data;
+          
+          // Sugerencia 4: Progreso de metas
+          if (goalsProgress.length > 0) {
+            const closestGoal = goalsProgress[0];
+            if (closestGoal.progressPercentage < 100) {
+              generatedSuggestions.push({
+                id: 4,
+                type: "ahorro",
+                title: `Meta "${closestGoal.name}" al ${closestGoal.progressPercentage}%`,
+                description: `Te faltan $${closestGoal.targetAmount - closestGoal.currentAmount} para alcanzar tu meta. ${closestGoal.daysRemaining > 0 ? `Necesitas ahorrar $${closestGoal.dailySavingsNeeded} por día.` : '¡La fecha límite es hoy!'}`,
+                action: "Ver metas",
+                icon: "target",
+                color: "#B6F2DC",
+              });
+            }
+          }
+          
+          // Sugerencia 5: Brechas de ahorro
+          if (savingsGaps.length > 0) {
+            const largestGap = savingsGaps[0];
+            generatedSuggestions.push({
+              id: 5,
+              type: "ahorro",
+              title: "Brecha en tus ahorros",
+              description: `Para alcanzar tu meta "${largestGap.goalName}", necesitas ahorrar $${largestGap.dailySavingsNeeded} diarios. ¿Quieres ajustar tu presupuesto?`,
+              action: "Ajustar metas",
+              icon: "bar-chart-2",
+              color: "#FFA500",
+            });
+          }
+        }
+        
+        setSuggestions(generatedSuggestions);
+        
+      } catch (error) {
+        console.error("Error generating suggestions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    generateSuggestions();
+  }, [currentUser.email]);
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -30,53 +138,6 @@ const SuggestionsScreen = () => {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
-
-  useEffect(() => {
-    // Simulación de carga de datos
-    const fetchSuggestions = async () => {
-      try {
-        // Aquí iría la lógica para obtener sugerencias basadas en los datos del usuario
-        // Por ahora usamos datos de ejemplo
-        setTimeout(() => {
-          setSuggestions([
-            {
-              id: 1,
-              type: "ahorro",
-              title: "Optimiza tus ahorros",
-              description: "Podrías ahorrar un 15% más si reduces tus gastos en entretenimiento.",
-              action: "Ver detalles",
-              icon: "dollar-sign",
-              color: "#B6F2DC",
-            },
-            {
-              id: 2,
-              type: "gasto",
-              title: "Controla tus gastos recurrentes",
-              description: "Has gastado $120,000 en suscripciones este mes. Considera cancelar las que no uses.",
-              action: "Revisar suscripciones",
-              icon: "credit-card",
-              color: "#D95F80",
-            },
-            {
-              id: 3,
-              type: "inversión",
-              title: "Oportunidad de inversión",
-              description: "Con tus ahorros actuales podrías invertir en un fondo con rendimiento del 8% anual.",
-              action: "Explorar opciones",
-              icon: "trending-up",
-              color: "#7AB6DA",
-            },
-          ]);
-          setLoading(false);
-        }, 1000);
-      } catch (err) {
-        console.error("Error fetching suggestions:", err);
-        setLoading(false);
-      }
-    };
-
-    fetchSuggestions();
-  }, []);
 
   if (!loaded && !error) {
     return null;
