@@ -34,7 +34,7 @@ const CustomDrawer = (props) => {
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {currentUser?.email?.charAt(0).toUpperCase() || '?'}
+                  {currentUser?.displayName?.charAt(0).toUpperCase() || '?'}
                 </Text>
               </View>
             )}

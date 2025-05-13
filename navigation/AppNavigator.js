@@ -16,6 +16,7 @@ import CustomDrawer from "../components/CustomDrawer";
 import GoalsScreen from "../screens/GoalsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import SuggestionsScreen from "../screens/SuggestionsScreen";
+import ProfileConfigScreen from "../screens/ProfileConfig";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -90,6 +91,11 @@ const MainDrawer = () => {
         drawerType: "slide",
       }}
     >
+      <Drawer.Screen
+        name="Profile"
+        component={ProfileConfigScreen}
+        options={{ title: "Perfil" }}
+      />
       <Drawer.Screen
         name="DashboardDrawer"
         component={MainStack}
