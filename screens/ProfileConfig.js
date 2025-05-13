@@ -18,9 +18,12 @@ import CurrencyPicker from '../components/CurrencyPicker';
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { getAuth, updatePassword } from "firebase/auth";
+import {Modal} from 'react-native';
+import { updateEmail, updateProfile } from 'firebase/auth';
 
 const ProfileConfigScreen = () => {
   const { currentUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
   const [notificationType, setNotificationType] = useState("push");
   const [selectedCurrency, setSelectedCurrency] = useState({
     code: 'COP',
@@ -31,11 +34,58 @@ const ProfileConfigScreen = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [newName, setNewName] = useState(currentUser?.displayName || '');
+  const [newEmail, setNewEmail] = useState(currentUser?.email || '');
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
     SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
   });
+
+  const handleUpdateProfile = async () => {
+    if (!newName.trim()) {
+      Alert.alert('Error', 'El nombre no puede estar vacío');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      Alert.alert('Error', 'Ingresa un email válido');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      // Actualizar nombre
+      await updateProfile(user, {
+        displayName: newName
+      });
+
+      // Actualizar email (requiere reautenticación)
+      if (newEmail !== currentUser.email) {
+        await updateEmail(user, newEmail);
+      }
+
+      Alert.alert('Éxito', 'Perfil actualizado correctamente');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error actualizando perfil:', error);
+      let errorMessage = 'Error al actualizar el perfil';
+      
+      if (error.code === 'auth/requires-recent-login') {
+        errorMessage = 'Debes reautenticarte para cambiar el email';
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Este email ya está en uso';
+      }
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   useEffect(() => {
     if (loaded || error) {
@@ -124,11 +174,53 @@ const ProfileConfigScreen = () => {
         
         <Button
             title="Editar información"
-            onPress={() => console.log('Editar información')} // Aquí tu función
+            onPress={() => setIsEditing(true)}
             variant="outline"
             icon="edit"
             style={styles.actionButton}
         />
+        {/* Modal de edición */}
+      <Modal
+        visible={isEditing}
+        animationType="slide"
+        transparent={false}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Editar información</Text>
+            <TouchableOpacity onPress={() => setIsEditing(false)}>
+              <Feather name="x" size={24} color="#52D1A1" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.label}>Nombre de usuario</Text>
+          <TextInput
+            style={styles.input}
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="Tu nombre"
+          />
+
+          <Text style={styles.label}>Correo electrónico</Text>
+          <TextInput
+            style={styles.input}
+            value={newEmail}
+            onChangeText={setNewEmail}
+            placeholder="tu@email.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <Button
+            title="Guardar cambios"
+            onPress={handleUpdateProfile}
+            variant="primary"
+            loading={isUpdating}
+            disabled={isUpdating}
+            style={styles.saveButton}
+          />
+        </View>
+        </Modal>
         </View>
 
         {/* Selector de moneda */}
@@ -391,6 +483,31 @@ container: {
     marginTop: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
+  },
+  saveButton: {
+    marginTop: 32,
+  },
+  label: {
+    color: '#FFFFFF',
+    fontFamily: 'SpaceGroteskRegular',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#121212',
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'SpaceGroteskBold',
+    color: '#FFFFFF',
   },
 });
 
