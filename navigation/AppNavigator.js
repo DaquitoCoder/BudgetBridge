@@ -92,19 +92,14 @@ const MainDrawer = () => {
       }}
     >
       <Drawer.Screen
-        name="Profile"
-        component={ProfileConfigScreen}
-        options={{ title: "Perfil" }}
-      />
-      <Drawer.Screen
         name="DashboardDrawer"
         component={MainStack}
         options={{ title: "Dashboard" }}
       />
       <Drawer.Screen
-        name="PruebaScreen"
-        component={MainStack}
-        options={{ title: "Prueba" }}
+        name="Profile"
+        component={ProfileConfigScreen}
+        options={{ title: "Perfil" }}
       />
       <Drawer.Screen
         name="SpendManagementScreen"
