@@ -15,7 +15,7 @@ import ActionSheet from "react-native-actions-sheet";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
 import {
-  addDoc, collection
+  addDoc, collection, Timestamp
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -119,7 +119,7 @@ const AddSpendActionSheet = React.forwardRef(
           amount: parseFloat(amount),
           name: name,
           category: category,
-          date: new Date()  // Fecha actual automática
+          date: Timestamp.fromDate(new Date())  // Convertir a Timestamp
         });
 
         // Ocultar el ActionSheet primero

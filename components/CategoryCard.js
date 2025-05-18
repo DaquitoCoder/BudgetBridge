@@ -19,34 +19,39 @@ const CategoryCard = ({ categories }) => {
 
   return (
     <View style={styles.dashboardCard}>
+
       <Text style={styles.cardTitle}>
         Tus gastos organizados por categoría
-      </Text>
-      <Text style={styles.cardDescription}>
-        Aquí verás{" "}
-        <Text style={styles.highlightText}>cuánto has gastado</Text> en cada{" "}
-        <Text style={styles.highlightText}>categoría</Text>. ¡Una forma
-        clara de detectar en qué se te va más el dinero!
       </Text>
 
       {categories && categories.length > 0 ? (
         categories.map((category, index) => (
-          <View 
-            key={index} 
+          <View
+            key={index}
             style={[
-              styles.categoryItem, 
+              styles.categoryItem,
               index % 2 === 0 ? styles.categoryGreen : styles.categoryPink,
               { width: `${category.percentage}%` }
             ]}
           >
             <Text style={styles.categoryName}>{category.name}</Text>
-            <Text style={styles.categoryAmount}>{category.amount}</Text>
+            <Text style={styles.categoryAmount}>${category.amount}</Text>
           </View>
         ))
       ) : (
-        <View style={[styles.categoryItem, styles.categoryGreen, { width: "100%" }]}>
-          <Text style={styles.categoryName}>No hay gastos registrados</Text>
-          <Text style={styles.categoryAmount}>$0</Text>
+        <View>
+          <View>
+            <Text style={styles.cardDescription}>
+              Aquí verás{" "}
+              <Text style={styles.highlightText}>cuánto has gastado</Text> en cada{" "}
+              <Text style={styles.highlightText}>categoría</Text>. ¡Una forma
+              clara de detectar en qué se te va más el dinero!
+            </Text>
+          </View>
+          <View style={[styles.categoryItem, styles.categoryGreen, { width: "100%" }]}>
+            <Text style={styles.categoryName}>No hay gastos registrados</Text>
+            <Text style={styles.categoryAmount}>$0</Text>
+          </View>
         </View>
       )}
     </View>
@@ -100,7 +105,7 @@ const styles = StyleSheet.create({
   categoryAmount: {
     color: "#000",
     fontSize: 16,
-    
+
     fontFamily: "SpaceGroteskBold",
   },
 });

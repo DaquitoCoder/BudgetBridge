@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -14,12 +14,16 @@ import SavingsCard from "../components/SavingsCard";
 import CategoryCard from '../components/CategoryCard';
 import ProgressCard from '../components/ProgressCard';
 import AddSpendActionSheet from "../components/AddSpendActionSheet";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { Timestamp } from "firebase/firestore";
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
   const addSheetRef = useRef();
+  const [topCategories, setTopCategories] = useState([]);
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -31,6 +35,54 @@ const DashboardScreen = () => {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
+
+  useEffect(() => {
+    const fetchTopCategories = async () => {
+      try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const startTimestamp = Timestamp.fromDate(startOfMonth);
+        const endTimestamp = Timestamp.fromDate(endOfMonth);
+
+        const spendsRef = collection(db, "gestion_gasto");
+
+        const q = query(
+          spendsRef,
+          where("usuario", "==", email),
+          where("date", ">=", startTimestamp),
+          where("date", "<=", endTimestamp)
+        );
+
+        const querySnapshot = await getDocs(q);
+        const categoryTotals = {};
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const cat = data.category || "Sin categoría";
+          const amount = Number(data.amount) || 0;
+          if (!categoryTotals[cat]) categoryTotals[cat] = 0;
+          categoryTotals[cat] += amount;
+        });
+        const sorted = Object.entries(categoryTotals)
+          .map(([name, amount]) => ({ name, amount }))
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 5)
+          .map((cat, idx) => ({
+            ...cat,
+            percentage: 100 - idx * 10
+          }));
+
+        setTopCategories(sorted);
+
+      } catch (e) {
+        console.error("Error al obtener categorías:", e);
+        setTopCategories([]);
+      }
+    };
+
+    if (email) fetchTopCategories();
+  }, [email]);
+
 
   const navigateToAllGoals = () => {
     navigation.navigate("GoalsScreen", { email });
@@ -67,25 +119,19 @@ const DashboardScreen = () => {
         <Text style={[styles.pageTitle]}>Mi tablero</Text>
 
         {/* Tarjeta de progreso y gastos/ingresos */}
-        <ProgressCard 
+        <ProgressCard
           onAddExpense={handleAddExpense}
           onAddIncome={handleAddIncome}
         />
 
         {/* Tarjeta de categorías */}
-        <CategoryCard 
-          categories={[
-            { name: 'Gasto 01', amount: '$15.000', percentage: 100 },
-            { name: 'Gasto 02', amount: '$10.000', percentage: 80 },
-            { name: 'Gasto 03', amount: '$5.000', percentage: 70 },
-            { name: 'Gasto 03', amount: '$5.000', percentage: 60 },
-            { name: 'Gasto 03', amount: '$5.000', percentage: 50 }
-          ]}
+        <CategoryCard
+          categories={topCategories}
         />
 
         {/* Tarjeta de metas */}
         <SavingsCard email={email} onViewAllPress={navigateToAllGoals} />
-        
+
       </ScrollView>
 
       <AddSpendActionSheet
