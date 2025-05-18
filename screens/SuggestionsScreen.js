@@ -153,8 +153,7 @@ const SuggestionsScreen = () => {
         navigation.navigate("SpendManagementScreen");
         break;
       case "inversión":
-        // navigation.navigate("InvestmentScreen");
-        Alert.alert("Próximamente", "Esta funcionalidad estará disponible pronto");
+        navigation.navigate("IncomeManagementScreen");
         break;
       default:
         break;

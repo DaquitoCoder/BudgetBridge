@@ -12,6 +12,7 @@ import CreateAccountStep2Screen from "../screens/CreateAccountStep2Screen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import SpendManagementScreen from "../screens/SpendManagementScreen";
+import IncomeManagementScreen from "../screens/IncomeManagementScreen";
 import CustomDrawer from "../components/CustomDrawer";
 import GoalsScreen from "../screens/GoalsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
@@ -108,6 +109,11 @@ const MainDrawer = () => {
         options={{ title: "Gestion de gastos" }}
       />
       <Drawer.Screen
+        name="IncomeManagementScreen"
+        component={IncomeManagementStack}
+        options={{ title: "Gestion de ingresos" }}
+      />
+      <Drawer.Screen
         name="GoalsScreen"
         component={GoalsStack}
         options={{ title: "Metas de ahorro" }}
@@ -137,6 +143,12 @@ const MainStack = () => {
 const SpendManagementStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Gastos" component={SpendManagementScreen} />
+  </Stack.Navigator>
+);
+
+const IncomeManagementStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Ingresos" component={IncomeManagementScreen} />
   </Stack.Navigator>
 );
 

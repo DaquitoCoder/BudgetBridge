@@ -17,12 +17,14 @@ import AddSpendActionSheet from "../components/AddSpendActionSheet";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { Timestamp } from "firebase/firestore";
+import AddIncomeActionSheet from "../components/AddIncomeActionSheet";
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
   const addSheetRef = useRef();
+  const addIncomeSheetRef = useRef();
   const [topCategories, setTopCategories] = useState([]);
 
   const [loaded, error] = useFonts({
@@ -96,17 +98,21 @@ const DashboardScreen = () => {
   };
 
   const handleAddIncome = () => {
-    // Implementar navegación o lógica para agregar ingreso
-    console.log("Agregar ingreso");
+    if (addIncomeSheetRef.current) {
+      addIncomeSheetRef.current.show();
+    }
   };
 
   const onAddNew = () => {
-    // Aquí puedes agregar lógica adicional después de guardar un gasto
+    
     console.log("Gasto agregado exitosamente");
   };
 
+  const onAddNewIncome = () => {
+    console.log("Ingreso agregado exitosamente");
+  };
+
   const onCancel = () => {
-    // Aquí puedes agregar lógica adicional si se cancela la operación
     console.log("Operación cancelada");
   };
 
@@ -139,6 +145,12 @@ const DashboardScreen = () => {
       <AddSpendActionSheet
         ref={addSheetRef}
         onAdd={onAddNew}
+        onCancel={onCancel}
+      />
+
+      <AddIncomeActionSheet
+        ref={addIncomeSheetRef}
+        onAdd={onAddNewIncome}
         onCancel={onCancel}
       />
     </View>

@@ -55,7 +55,41 @@ const ProgressCard = ({ email, onAddExpense, onAddIncome }) => {
       }
     }
 
-    if (email) fetchExpenses()
+    const fetchIncomes = async () => {
+      try {
+        const now = new Date()
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+        const startTimestamp = Timestamp.fromDate(startOfMonth)
+        const endTimestamp = Timestamp.fromDate(endOfMonth)
+
+        const incomesRef = collection(db, "gestion_ingreso")
+        const q = query(
+          incomesRef,
+          where("usuario", "==", email),
+          where("date", ">=", startTimestamp),
+          where("date", "<=", endTimestamp),
+        )
+
+        const querySnapshot = await getDocs(q)
+        const incomeTotals = querySnapshot.docs.reduce((acc, doc) => {
+          const data = doc.data()
+          const amount = Number(data.amount) || 0
+          return acc + amount
+        }, 0)
+        setIncome(incomeTotals)
+
+
+      } catch (e) {
+        console.error("Error al obtener ingresos:", e)
+        setIncome(0)
+      }
+    }
+
+    if (email) {
+      fetchExpenses()
+      fetchIncomes()
+    }
   }, [email])
 
   return (
@@ -65,7 +99,7 @@ const ProgressCard = ({ email, onAddExpense, onAddIncome }) => {
           <View style={styles.balanceRow}>
             <Text style={styles.balanceAmount}>${(income - expenses).toLocaleString("es-CO")}</Text>
             <View style={styles.progressCircleSmall}>
-              <Text style={styles.progressTextSmall}>{1}%</Text>
+              <Text style={styles.progressTextSmall}>{((income - expenses) / income * 100).toFixed(0)}%</Text>
             </View>
           </View>
           <Text style={styles.balanceLabel}>Total disponible</Text>
@@ -76,7 +110,7 @@ const ProgressCard = ({ email, onAddExpense, onAddIncome }) => {
               <Text style={styles.expenseLabel}>Gastos del mes</Text>
             </View>
             <View style={[styles.progressCircleSmall, styles.expenseCircle]}>
-              <Text style={styles.progressTextSmall}>{1}%</Text>
+              <Text style={styles.progressTextSmall}>{((expenses) / income * 100).toFixed(0)}%</Text>
             </View>
           </View>
 
@@ -86,7 +120,7 @@ const ProgressCard = ({ email, onAddExpense, onAddIncome }) => {
               <Text style={styles.incomeLabel}>Ingresos del mes</Text>
             </View>
             <View style={[styles.progressCircleSmall, styles.incomeCircle]}>
-              <Text style={styles.progressTextSmall}>{1}%</Text>
+              <Text style={styles.progressTextSmall}>{((income) / income * 100).toFixed(0)}%</Text>
             </View>
           </View>
         </View>
