@@ -9,7 +9,6 @@ import {
   Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../contexts/AuthContext";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -125,8 +124,9 @@ const ProfileConfigScreen = () => {
 
       let errorMessage = "Ocurrió un error al cambiar la contraseña";
       if (error.code === "auth/requires-recent-login") {
-        errorMessage =
-          "Por favor, vuelve a iniciar sesión antes de cambiar tu contraseña";
+        errorMessage = "Por favor, vuelve a iniciar sesión antes de cambiar tu contraseña";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "La contraseña es demasiado débil. Asegúrate de usar una contraseña más segura";
       }
 
       Alert.alert("Error", errorMessage);
@@ -135,17 +135,8 @@ const ProfileConfigScreen = () => {
     }
   };
 
-  const handleCurrencyChange = () => {
-    // Abrir modal o pantalla con selección de moneda (esto es solo placeholder)
-    Alert.alert("Próximamente", "Podrás cambiar tu moneda aquí.");
-  };
-
-  const toggleNotificationType = () => {
-    setNotificationType((prev) => (prev === "push" ? "email" : "push"));
-  };
-
   return (
-    <View style={styles.c0ontainer}>
+    <View style={styles.container}>
       <Header title="Tu perfil" />
       <ScrollView style={styles.content}>
         {/* Info de Usuario */}
@@ -291,6 +282,12 @@ const ProfileConfigScreen = () => {
             <Text style={styles.optionText}>Notificaciones push</Text>
           </TouchableOpacity>
 
+          {
+            notificationType === "push" && (  
+              <Text style={styles.notificationText}>Recibe alertas directamente en tu teléfono, sin necesidad de abrir la app.</Text>
+            )
+          }
+
           <TouchableOpacity
             style={[
               styles.optionButton,
@@ -301,6 +298,13 @@ const ProfileConfigScreen = () => {
             <Feather name="mail" size={16} color="#FFFFFF" />
             <Text style={styles.optionText}>Notificaciones por correo</Text>
           </TouchableOpacity>
+
+          {
+            notificationType === "email" && (
+              <Text style={styles.notificationText}>Recibe alertas por correo electrónico, para que puedas estar al tanto de tus finanzas en cualquier momento.</Text>
+            )
+          }
+
         </View>
       </ScrollView>
     </View>
@@ -308,13 +312,14 @@ const ProfileConfigScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // aquí mantenés exactamente los styles que ya tenías
   container: {
     flex: 1,
-    backgroundColor: "#121212", // Fondo oscuro
+    backgroundColor: "#363E40",
   },
   content: {
+    flex: 1,
     padding: 16,
+    marginBottom: 16,
   },
   suggestionCard: {
     backgroundColor: "#2A3038",
@@ -361,11 +366,17 @@ const styles = StyleSheet.create({
     borderColor: "#333333",
   },
   optionButtonSelected: {
-    borderColor: "#52D1A1", // Verde/cian como en el mockup
+    borderColor: "#52D1A1",
     borderWidth: 1.5,
   },
   optionText: {
     color: "#FFFFFF",
+    fontSize: 14,
+    marginLeft: 10,
+    fontFamily: "SpaceGroteskRegular",
+  },
+  optionTextSelected: {
+    color: "#52D1A1",
     fontSize: 14,
     marginLeft: 10,
     fontFamily: "SpaceGroteskRegular",
@@ -377,7 +388,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionText: {
-    color: "#52D1A1", // Color verde/cian para acciones
+    color: "#52D1A1",
     fontFamily: "SpaceGroteskBold",
     fontSize: 14,
   },
@@ -386,7 +397,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#333333",
     marginVertical: 16,
   },
-
+  notificationText: {
+    color: "#52D1A1",
+    fontSize: 12,
+    fontFamily: "SpaceGroteskRegular",
+    marginTop: 8,
+  },
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -447,11 +463,6 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGroteskBold",
     fontSize: 14,
     marginLeft: 6,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#1E2429",
-    padding: 16,
   },
   section: {
     marginBottom: 24,

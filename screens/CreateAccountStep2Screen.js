@@ -111,15 +111,11 @@ const CreateAccountStep2Screen = () => {
       await setDoc(doc(db, 'users', user.uid), {
         fullName,
         email,
-        currency: currencyData, // Guardamos el objeto plano
-        createdAt: new Date().toISOString(), // Convertimos a string para evitar problemas de serialización
+        currency: currencyData,
+        createdAt: new Date().toISOString(),
       });
 
-      // Navegar al Dashboard
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Dashboard' }],
-      });
+      // No need to navigate manually - AppNavigator will handle it based on auth state
     } catch (error) {
       console.error('Error al crear cuenta:', error);
       let errorMessage = 'Error al crear la cuenta';
