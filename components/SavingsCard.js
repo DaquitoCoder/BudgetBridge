@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: "bold",
     marginBottom: 8,
     fontFamily: "SpaceGroteskBold",
     textAlign: "center",
@@ -145,7 +144,6 @@ const styles = StyleSheet.create({
   savingsAmount: {
     color: "#FFFFFF",
     fontSize: 32,
-    fontWeight: "bold",
     fontFamily: "SpaceGroteskBold",
   },
   savingsTotal: {

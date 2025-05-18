@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#B6F2DC",
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "SpaceGroteskBold",
     marginLeft: 10,
   },
   line: {

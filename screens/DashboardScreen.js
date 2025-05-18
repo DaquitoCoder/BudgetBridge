@@ -1,5 +1,3 @@
-// screens/DashboardScreen.js
-
 import React, { useEffect } from "react";
 import {
   View,
@@ -15,6 +13,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import SavingsCard from "../components/SavingsCard";
+import CategoryCard from '../components/CategoryCard';
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
@@ -43,7 +42,7 @@ const DashboardScreen = () => {
       <Header title="Dashboard" />
 
       <ScrollView style={styles.content}>
-        <Text style={styles.pageTitle}>Mi tablero</Text>
+        <Text style={[styles.pageTitle]}>Mi tablero</Text>
 
         {/* Tarjeta de ingresos/gastos */}
         <View style={styles.dashboardCard}>
@@ -79,32 +78,15 @@ const DashboardScreen = () => {
         </View>
 
         {/* Tarjeta de categorías */}
-        <View style={styles.dashboardCard}>
-          <Text style={styles.cardTitle}>
-            Tus gastos organizados por categoría
-          </Text>
-          <Text style={styles.cardDescription}>
-            Aquí verás{" "}
-            <Text style={styles.highlightText}>cuánto has gastado</Text> en cada{" "}
-            <Text style={styles.highlightText}>categoría</Text>. ¡Una forma
-            clara de detectar en qué se te va más el dinero!
-          </Text>
-
-          <View style={[styles.categoryItem, styles.categoryGreen]}>
-            <Text style={styles.categoryName}>Gasto 01</Text>
-            <Text style={styles.categoryAmount}>$15.000</Text>
-          </View>
-
-          <View style={[styles.categoryItem, styles.categoryPink]}>
-            <Text style={styles.categoryName}>Gasto 02</Text>
-            <Text style={styles.categoryAmount}>$10.000</Text>
-          </View>
-
-          <View style={[styles.categoryItem, styles.categoryGreen]}>
-            <Text style={styles.categoryName}>Gasto 03</Text>
-            <Text style={styles.categoryAmount}>$5.000</Text>
-          </View>
-        </View>
+        <CategoryCard 
+          categories={[
+            { name: 'Gasto 01', amount: '$15.000', percentage: 100 },
+            { name: 'Gasto 02', amount: '$10.000', percentage: 80 },
+            { name: 'Gasto 03', amount: '$5.000', percentage: 70 },
+            { name: 'Gasto 03', amount: '$5.000', percentage: 60 },
+            { name: 'Gasto 03', amount: '$5.000', percentage: 50 }
+          ]}
+        />
 
         {/* Tarjeta de metas */}
         <SavingsCard email={email} onViewAllPress={navigateToAllGoals} />
@@ -126,9 +108,8 @@ const styles = StyleSheet.create({
   pageTitle: {
     color: "#FFFFFF",
     fontSize: 24,
-    fontWeight: "bold",
     marginBottom: 16,
-    fontFamily: "SpaceGroteskBold",
+    fontFamily: "SpaceGroteskBold"
   },
   dashboardCard: {
     backgroundColor: "#2A3038",
@@ -154,7 +135,7 @@ const styles = StyleSheet.create({
   progressText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "bold",
+    
     fontFamily: "SpaceGroteskBold",
   },
   progressInfo: {
@@ -163,19 +144,19 @@ const styles = StyleSheet.create({
   progressTitle: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "bold",
+    
     marginBottom: 4,
     fontFamily: "SpaceGroteskBold",
   },
   progressDescription: {
-    color: "#AAAAAA",
+    color: "#FFFFFF",
     fontSize: 14,
     lineHeight: 20,
     fontFamily: "SpaceGroteskRegular",
   },
   highlightText: {
     color: "#FFFFFF",
-    fontWeight: "bold",
+    
     fontFamily: "SpaceGroteskBold",
   },
   addButton: {
@@ -204,46 +185,7 @@ const styles = StyleSheet.create({
   incomeText: {
     color: "#4CD964",
     fontFamily: "SpaceGroteskBold",
-  },
-  cardTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    fontFamily: "SpaceGroteskBold",
-  },
-  cardDescription: {
-    color: "#AAAAAA",
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
-    fontFamily: "SpaceGroteskRegular",
-  },
-  categoryItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  categoryGreen: {
-    backgroundColor: "rgba(76, 217, 100, 0.2)",
-  },
-  categoryPink: {
-    backgroundColor: "rgba(255, 107, 107, 0.2)",
-  },
-  categoryName: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontFamily: "SpaceGroteskRegular",
-  },
-  categoryAmount: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "SpaceGroteskBold",
-  },
+  }
 });
 
 export default DashboardScreen;

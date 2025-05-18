@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: "#FFFFFF",
     fontSize: 32,
-    fontWeight: "bold",
+    fontFamily: "SpaceGroteskBold"
   },
 
   profileInfo: {

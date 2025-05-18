@@ -15,14 +15,8 @@ import ActionSheet from "react-native-actions-sheet";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
 import {
-  getDocs,
-  getDoc,
-  collection,
-  doc,
-  setDoc,
-  addDoc,
+  addDoc, collection
 } from "firebase/firestore";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "../contexts/AuthContext";
 
 const formatWithDots = (value) => {
@@ -44,7 +38,26 @@ const AddSpendActionSheet = React.forwardRef(
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const internalRef = useRef();
-    
+
+    // Categorías locales
+    const localCategories = [
+      { id: '1', nombre: 'Ahorro' },
+      { id: '2', nombre: 'Casa' },
+      { id: '3', nombre: 'Diversión' },
+      { id: '4', nombre: 'Educación' },
+      { id: '5', nombre: 'Emergencia' },
+      { id: '6', nombre: 'Estudios' },
+      { id: '7', nombre: 'Familia' },
+      { id: '8', nombre: 'Inversiones' },
+      { id: '9', nombre: 'Mobiliario' },
+      { id: '10', nombre: 'Tecnología' },
+      { id: '11', nombre: 'Trabajo' },
+      { id: '12', nombre: 'Retiro' },
+      { id: '13', nombre: 'Salud' },
+      { id: '14', nombre: 'Viajes' },
+      { id: '15', nombre: 'Vivienda' }
+    ];
+
     const [loaded, error] = useFonts({
       SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
       SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
@@ -65,29 +78,23 @@ const AddSpendActionSheet = React.forwardRef(
 
     useImperativeHandle(ref, () => ({
       show: async () => {
-        
         setLoading(true);
-
         try {
-          const snap = await getDocs(collection(db, "categoria")).catch(e => {
-            console.error("[Error] En getDocs(categoria):", e);
-            throw e;
-          });
-
-          setCategories(
-            snap.docs.map((d) => ({ id: d.id, nombre: d.data().nombre }))
-          );
-
+          // Usar categorías locales en lugar de cargar desde Firebase
+          setCategories(localCategories);
         } catch (e) {
           console.error("Error cargando categorías:", e);
         } finally {
           setLoading(false);
         }
-    
         internalRef.current?.show();
       },
       hide: () => {
         internalRef.current?.hide();
+        setCategory("");
+        setAmount("");
+        setName("");
+        setFecha("");
       },
       reload: () => {
         setCategory("");
@@ -102,22 +109,38 @@ const AddSpendActionSheet = React.forwardRef(
         Alert.alert("Error", "Completa todos los campos");
         return;
       }
-    
+
       try {
         setSaving(true);
-        
+
         // Guardar como nuevo documento en la colección (auto-ID)
-        await addDoc(collection(db, "gestion_gasto"), {
+        const docRef = await addDoc(collection(db, "gestion_gasto"), {
           usuario: email,  // Campo separado (no como ID)
           amount: parseFloat(amount),
           name: name,
           category: category,
           date: new Date()  // Fecha actual automática
         });
-    
-        Alert.alert("Éxito", "Gasto registrado");
+
+        // Ocultar el ActionSheet primero
         internalRef.current?.hide();
-        onSaveSuccess?.(); // Recargar la lista de gastos
+        
+        // Limpiar los campos
+        setCategory("");
+        setAmount("");
+        setName("");
+        setFecha("");
+
+        // Notificar éxito y actualizar la lista
+        Alert.alert("Éxito", "Gasto registrado", [
+          {
+            text: "OK",
+            onPress: () => {
+              // Llamar al callback de éxito para actualizar la lista
+              onSaveSuccess?.();
+            }
+          }
+        ]);
       } catch (error) {
         console.error("Error guardando:", error);
         Alert.alert("Error", "No se pudo guardar. Error: " + error.message);
@@ -132,7 +155,7 @@ const AddSpendActionSheet = React.forwardRef(
         setName(gasto.name || '');
         setCategory(gasto.category || '');
         setFecha(gasto.date ? formatDate(gasto.date) : '');
-      } else {  
+      } else {
         setAmount('');
         setName('');
         setCategory('');
@@ -167,85 +190,85 @@ const AddSpendActionSheet = React.forwardRef(
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
-        <View style={styles.content}>
-          <Text style={styles.title}>Agregar gasto nuevo</Text>
+          <View style={styles.content}>
+            <Text style={styles.title}>Agregar gasto nuevo</Text>
 
-          {loading ? (
-            <ActivityIndicator
-              color="#B6F2DC"
-              size="large"
-              style={{ marginVertical: 20 }}
-            />
-          ):(<>
-          {/* Categoría */}
-          <TouchableOpacity
-            style={styles.row}
-            onPress={() => toggle("category")}
-          >
-            <Text style={styles.rowText}>
-              {category || "Escoger categoría de gasto"}
-            </Text>
-            <View style={styles.arrowCircle}>
-              <Feather
-                name={
-                  openSection === "category"
-                    ? "chevron-down"
-                    : "chevron-right"
-                }
-                size={18}
-                color="#000"
-                />
-            </View>
-          </TouchableOpacity>
-          {openSection === "category" &&
-              categories.map((c) => (
-                <TouchableOpacity
-                  key={c.id}
-                  style={styles.optionItem}
-                  onPress={() => {
-                    setCategory(c.nombre);
-                    setOpenSection(null);
-                  }}
-                >
-                  <Text style={styles.optionText}>{c.nombre}</Text>
-                </TouchableOpacity>
-              ))}
+            {loading ? (
+              <ActivityIndicator
+                color="#B6F2DC"
+                size="large"
+                style={{ marginVertical: 20 }}
+              />
+            ) : (<>
+              {/* Categoría */}
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => toggle("category")}
+              >
+                <Text style={styles.rowText}>
+                  {category || "Escoger categoría de gasto"}
+                </Text>
+                <View style={styles.arrowCircle}>
+                  <Feather
+                    name={
+                      openSection === "category"
+                        ? "chevron-down"
+                        : "chevron-right"
+                    }
+                    size={18}
+                    color="#000"
+                  />
+                </View>
+              </TouchableOpacity>
+              {openSection === "category" &&
+                categories.map((c) => (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={styles.optionItem}
+                    onPress={() => {
+                      setCategory(c.nombre);
+                      setOpenSection(null);
+                    }}
+                  >
+                    <Text style={styles.optionText}>{c.nombre}</Text>
+                  </TouchableOpacity>
+                ))}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Escribe el monto gastado $$$"
-            placeholderTextColor="#ccc"
-            keyboardType="numeric"
-            value={amount}
-            onChangeText={setAmount}
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Escribe el monto gastado $$$"
+                placeholderTextColor="#ccc"
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={setAmount}
+              />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Describe en que gastaste el dinero"
-            placeholderTextColor="#ccc"
-            value={name}
-            onChangeText={setName}
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Describe en que gastaste el dinero"
+                placeholderTextColor="#ccc"
+                value={name}
+                onChangeText={setName}
+              />
 
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleSaveSpend}
-            disabled={saving}
-          >
-            <Feather name="plus" size={18} color="#1E2429" />
-            <Text style={styles.addButtonText}>
-              {saving ? "Guardando..." : "Agregar gasto"}
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleSaveSpend}
+                disabled={saving}
+              >
+                <Feather name="plus" size={18} color="#1E2429" />
+                <Text style={styles.addButtonText}>
+                  {saving ? "Guardando..." : "Agregar gasto"}
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => ref?.current?.hide()}
-          >
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
-          </TouchableOpacity>
-          </>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => ref?.current?.hide()}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </>
             )}
           </View>
         </ScrollView>
@@ -266,7 +289,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: "bold",
+    
     marginBottom: 16,
     textAlign: "center",
     fontFamily: "SpaceGroteskBold",
@@ -321,7 +344,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#1E2429",
     fontSize: 16,
-    fontWeight: "bold",
+    
     marginLeft: 8,
     fontFamily: "SpaceGroteskBold",
   },

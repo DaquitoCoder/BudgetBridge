@@ -178,7 +178,6 @@ const styles = StyleSheet.create({
   title: {
     color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: "bold",
     textAlign: "center",
     marginBottom: 16,
     fontFamily: "SpaceGroteskBold",

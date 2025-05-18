@@ -25,7 +25,7 @@ export default function SpendManagementScreen() {
   const { currentUser } = useAuth();
   const email = currentUser?.email || "";
   const [spends, setSpends] = useState([]);
-  const addSheetRef  = useRef();
+  const addSheetRef = useRef();
   const otherRef = useRef();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null)
@@ -36,8 +36,8 @@ export default function SpendManagementScreen() {
   });
   const filterSheetRef = useRef();
   const [sortOrder, setSortOrder] = useState({
-    field: 'date', // 'date' o 'name'
-    direction: 'desc' // 'asc' o 'desc'
+    field: 'date',
+    direction: 'desc'
   });
   const sortSheetRef = useRef();
 
@@ -69,20 +69,20 @@ export default function SpendManagementScreen() {
       maxAmount: null
     };
     setFilters(initialFilters);
-  }, [])  
+  }, [])
 
   const fetchSpends = async () => {
     try {
       setLoading(true);
       const spendsRef = collection(db, "gestion_gasto");
       let q = query(
-        spendsRef, 
+        spendsRef,
         where("usuario", "==", email)
       );
-  
+
       const querySnapshot = await getDocs(q);
       let spendsData = [];
-  
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         spendsData.push({
@@ -95,7 +95,7 @@ export default function SpendManagementScreen() {
           rawDate: data.date // Para ordenar por fecha
         });
       });
-  
+
       // Aplicar filtros
       if (filters.category) {
         spendsData = spendsData.filter(item => item.category === filters.category);
@@ -106,12 +106,12 @@ export default function SpendManagementScreen() {
       if (filters.maxAmount) {
         spendsData = spendsData.filter(item => item.amount <= filters.maxAmount);
       }
-  
+
       // Aplicar ordenamiento
       spendsData.sort((a, b) => {
         if (sortOrder.field === 'date') {
-          return sortOrder.direction === 'desc' 
-            ? b.rawDate - a.rawDate 
+          return sortOrder.direction === 'desc'
+            ? b.rawDate - a.rawDate
             : a.rawDate - b.rawDate;
         } else {
           // Orden alfabético insensible a mayúsculas/minúsculas
@@ -119,7 +119,7 @@ export default function SpendManagementScreen() {
           return sortOrder.direction === 'desc' ? -comparison : comparison;
         }
       });
-  
+
       setSpends(spendsData);
       setError(null);
     } catch (err) {
@@ -133,20 +133,22 @@ export default function SpendManagementScreen() {
 
   useEffect(() => {
     fetchSpends();
-  }, [sortOrder,filters]);
+  }, [sortOrder, filters]);
 
   const onAddNew = () => {
-    Alert.alert("¡Éxito!", "Gasto agregado exitosamente");
+    // Recargar los gastos inmediatamente
+    fetchSpends();
+    
+    // Limpiar los filtros
     const resetFilters = {
       category: null,
       minAmount: null,
       maxAmount: null
     };
     setFilters(resetFilters);
-    fetchSpends(); // Recargar los gastos
   };
-  
-  const onCancel = () => {};
+
+  const onCancel = () => { };
 
   const openAddSpend = () => {
     if (addSheetRef.current) {
@@ -186,27 +188,27 @@ export default function SpendManagementScreen() {
         {/* Filter Buttons */}
         <View style={styles.filterContainer}>
           <TouchableOpacity style={styles.filterButton}
-          onPress={() => filterSheetRef.current?.show()}>
+            onPress={() => filterSheetRef.current?.show()}>
             <Feather name="sliders" size={16} color="white" />
             <Text style={styles.filterText}>Filtrar por</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-  style={[
-    styles.filterButton,
-    sortOrder.field === 'date' && styles.activeSortButton
-  ]}
-  onPress={() => sortSheetRef.current?.show()}
->
-  <MaterialIcons name="sort-by-alpha" size={16} color="white" />
-  <Text style={styles.filterText}>{sortOrder.field === 'date' ? 'Por fecha' : 'Por nombre'}</Text>
-  <Feather 
-    name={sortOrder.direction === 'desc' ? 'arrow-down' : 'arrow-up'} 
-    size={16} 
-    color="#8CE3C3" 
-    style={styles.sortIcon}
-  />
-</TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              sortOrder.field === 'date' && styles.activeSortButton
+            ]}
+            onPress={() => sortSheetRef.current?.show()}
+          >
+            <MaterialIcons name="sort-by-alpha" size={16} color="white" />
+            <Text style={styles.filterText}>{sortOrder.field === 'date' ? 'Por fecha' : 'Por nombre'}</Text>
+            <Feather
+              name={sortOrder.direction === 'desc' ? 'arrow-down' : 'arrow-up'}
+              size={16}
+              color="#8CE3C3"
+              style={styles.sortIcon}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Spends List */}
@@ -262,17 +264,17 @@ export default function SpendManagementScreen() {
           <Text style={styles.addButtonText}>Agregar gasto</Text>
         </TouchableOpacity>
       </View>
-      <AddSpendActionSheet 
-      ref={addSheetRef} 
-      onAdd={onAddNew} 
-      onCancel={onCancel}/>
+      <AddSpendActionSheet
+        ref={addSheetRef}
+        onAdd={onAddNew}
+        onCancel={onCancel} />
       <FilterSpendsActionSheet
-      ref={filterSheetRef}
-      currentFilters={filters}
-      onApplyFilters={applyFilters}
-      categories={['Ahorro', 'Casa', 'Diversión', 'Educación', 'Emergencia', 'Estudios', 
-        'Familia', 'Inversiones', 'Mobiliario', 'Tecnología', 'Trabajo',  'Retiro', 'Salud', 
-        'Viajes', 'Vivienda']} // Personaliza según tus categorías
+        ref={filterSheetRef}
+        currentFilters={filters}
+        onApplyFilters={applyFilters}
+        categories={['Ahorro', 'Casa', 'Diversión', 'Educación', 'Emergencia', 'Estudios',
+          'Familia', 'Inversiones', 'Mobiliario', 'Tecnología', 'Trabajo', 'Retiro', 'Salud',
+          'Viajes', 'Vivienda']}
       />
       <SortSpendsActionSheet
         ref={sortSheetRef}

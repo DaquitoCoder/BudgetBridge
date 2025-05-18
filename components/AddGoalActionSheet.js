@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: "bold",
+    
     marginBottom: 16,
     textAlign: "center",
     fontFamily: "SpaceGroteskBold",
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#1E2429",
     fontSize: 16,
-    fontWeight: "bold",
+    
     marginLeft: 8,
     fontFamily: "SpaceGroteskBold",
   },
