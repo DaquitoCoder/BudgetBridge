@@ -69,6 +69,7 @@ const DashboardScreen = () => {
           .slice(0, 5)
           .map((cat, idx) => ({
             ...cat,
+            amount: cat.amount.toLocaleString('es-CO'),
             percentage: 100 - idx * 10
           }));
 
@@ -120,6 +121,7 @@ const DashboardScreen = () => {
 
         {/* Tarjeta de progreso y gastos/ingresos */}
         <ProgressCard
+          email={email}
           onAddExpense={handleAddExpense}
           onAddIncome={handleAddIncome}
         />
