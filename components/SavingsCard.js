@@ -121,7 +121,7 @@ const SavingsCard = ({ email, onViewAllPress, showViewAll = true }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#2A3038",
+    backgroundColor: "#232728",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,

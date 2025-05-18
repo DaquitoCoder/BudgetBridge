@@ -84,6 +84,7 @@ const MainDrawer = () => {
         },
         drawerLabelStyle: {
           color: "#FFFFFF",
+          fontFamily: "SpaceGroteskRegular",
         },
         drawerActiveTintColor: "#d95f80",
         drawerInactiveTintColor: "#FFFFFF",

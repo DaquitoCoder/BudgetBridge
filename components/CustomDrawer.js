@@ -1,4 +1,5 @@
 'use client';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -7,16 +8,31 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuth } from '../contexts/AuthContext';
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 
 const CustomDrawer = (props) => {
   const { currentUser } = useAuth();
   
+  const [loaded, error] = useFonts({
+    SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
+    SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
+  });
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
   const handleLogout = () => {
     const auth = getAuth();
     signOut(auth).catch((error) => {
       console.error('Error al cerrar sesión:', error);
     });
   };
+
+  if (!loaded && !error) return null;
 
   return (
     <DrawerContentScrollView
@@ -89,21 +105,22 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: "SpaceGroteskBold"
   },
   userName: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "SpaceGroteskBold",
     marginBottom: 4,
   },
   userEmail: {
     color: '#AAAAAA',
     fontSize: 14,
+    fontFamily: "SpaceGroteskRegular",
   },
   separator: {
     height: 1,
-    backgroundColor: '#2A3038',
+    backgroundColor: '#b6f2dc',
     marginVertical: 16,
   },
   logoutButton: {
@@ -115,6 +132,7 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     fontSize: 16,
     marginLeft: 16,
+    fontFamily: "SpaceGroteskRegular",
   },
 });
 
