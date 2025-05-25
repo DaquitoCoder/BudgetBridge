@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   Image,
   TouchableOpacity,
   ActivityIndicator,
@@ -128,90 +129,100 @@ const LoginScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../assets/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={[styles.welcomeText, { fontFamily: "SpaceGroteskBold" }]}>
-          ¡Bienvenid@!
-        </Text>
-      </View>
-
-      <View style={styles.formContainer}>
-        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
-        <Input
-          placeholder="Escribe tu correo electrónico"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (emailError) validateEmail(text);
-          }}
-          icon="user"
-        />
-
-        {passwordError ? (
-          <Text style={styles.errorText}>{passwordError}</Text>
-        ) : null}
-
-        <Input
-          placeholder="Escribe tu contraseña"
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            if (passwordError) validatePassword(text);
-          }}
-          secureTextEntry
-          icon="lock"
-        />
-
-        <TouchableOpacity
-          style={styles.forgotPasswordContainer}
-          onPress={() => navigation.navigate("ForgotPassword")}
-        >
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.container}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../assets/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text
-            style={[
-              styles.forgotPasswordText,
-              { fontFamily: "SpaceGroteskRegular" },
-            ]}
+            style={[styles.welcomeText, { fontFamily: "SpaceGroteskBold" }]}
           >
-            ¿Olvidaste tu contraseña?
+            ¡Bienvenid@!
           </Text>
-        </TouchableOpacity>
-
-        <Button
-          title="Iniciar sesión"
-          onPress={handleLogin}
-          variant="primary"
-          disabled={isLoading}
-        />
-
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>O</Text>
-          <View style={styles.divider} />
         </View>
 
-        <Button
-          title="Iniciar sesión con Google"
-          onPress={() => {}}
-          variant="outline"
-          icon="google"
-        />
+        <View style={styles.formContainer}>
+          {emailError ? (
+            <Text style={styles.errorText}>{emailError}</Text>
+          ) : null}
 
-        <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>¿Eres nuevo? </Text>
+          <Input
+            placeholder="Escribe tu correo electrónico"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (emailError) validateEmail(text);
+            }}
+            icon="user"
+          />
+
+          {passwordError ? (
+            <Text style={styles.errorText}>{passwordError}</Text>
+          ) : null}
+
+          <Input
+            placeholder="Escribe tu contraseña"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (passwordError) validatePassword(text);
+            }}
+            secureTextEntry
+            icon="lock"
+          />
+
           <TouchableOpacity
-            onPress={() => navigation.navigate("CreateAccountStep1")}
+            style={styles.forgotPasswordContainer}
+            onPress={() => navigation.navigate("ForgotPassword")}
           >
-            <Text style={styles.signupLink}>Crear cuenta nueva</Text>
+            <Text
+              style={[
+                styles.forgotPasswordText,
+                { fontFamily: "SpaceGroteskRegular" },
+              ]}
+            >
+              ¿Olvidaste tu contraseña?
+            </Text>
           </TouchableOpacity>
+
+          <Button
+            title="Iniciar sesión"
+            onPress={handleLogin}
+            variant="primary"
+            disabled={isLoading}
+          />
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>O</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <Button
+            title="Iniciar sesión con Google"
+            onPress={() => {}}
+            variant="outline"
+            icon="google"
+          />
+
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>¿Eres nuevo? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("CreateAccountStep1")}
+            >
+              <Text style={styles.signupLink}>Crear cuenta nueva</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
