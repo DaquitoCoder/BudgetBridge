@@ -74,6 +74,7 @@ const GoalsScreen = () => {
 
       <EditGoalsActionSheet
         ref={editSheetRef}
+        email={email}
         onEdit={onEdit}
         onAddNew={onAddNew}
         onCancel={onCancel}

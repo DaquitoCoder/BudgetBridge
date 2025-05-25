@@ -20,8 +20,8 @@ import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
 
 const BAR_HEIGHT = 39;
-const BAR_BORDER_RADIUS = 8; // Nuevo radio menor
-const SCREEN_WIDTH = Dimensions.get("window").width - 32; // 16 padding each side
+const BAR_BORDER_RADIUS = 8;
+const SCREEN_WIDTH = Dimensions.get("window").width - 32;
 
 const OtherGoalsCard = forwardRef(({ email }, ref) => {
   const [goals, setGoals] = useState([]);
@@ -86,61 +86,64 @@ const OtherGoalsCard = forwardRef(({ email }, ref) => {
     <View style={styles.card}>
       <Text style={styles.cardTitle}>Otras metas de ahorro</Text>
       <ScrollView>
-        {goals.map((g, idx) => {
-          const inicio = g.fecha_inicio.toDate
-            ? g.fecha_inicio.toDate()
-            : new Date(g.fecha_inicio);
-          const endLabel = g.tiene_final
-            ? g.fecha_final.toDate
-              ? g.fecha_final.toDate().toLocaleDateString()
-              : new Date(g.fecha_final).toLocaleDateString()
-            : "Continuo";
-          const range = `De ${inicio.toLocaleDateString()} - ${endLabel}`;
-          const percent = Math.min(
-            (g.total_ahorrado / g.valor_meta) * 100,
-            100
-          );
-          const barColor = getBarColor(g);
-          return (
-            <View key={g.id} style={styles.goalItem}>
-              {/* Barra de progreso */}
-              <View style={styles.barWrapper}>
-                <View style={styles.barBackground} />
-                <View
-                  style={[
-                    styles.barFill,
-                    {
-                      width: (SCREEN_WIDTH * percent) / 100,
-                      backgroundColor: barColor,
-                    },
-                  ]}
-                />
-                <Text style={styles.barText}>
-                  ${g.total_ahorrado.toLocaleString()} / $
-                  {g.valor_meta.toLocaleString()}
-                </Text>
+        {goals.length === 0 ? (
+          <Text style={styles.noGoalsText}>
+            No hay ninguna meta guardada por el momento.{"\n"}
+            Por favor usa el botón de abajo para agregar una nueva meta.
+          </Text>
+        ) : (
+          goals.map((g, idx) => {
+            const inicio = g.fecha_inicio.toDate
+              ? g.fecha_inicio.toDate()
+              : new Date(g.fecha_inicio);
+            const endLabel = g.tiene_final
+              ? g.fecha_final.toDate
+                ? g.fecha_final.toDate().toLocaleDateString()
+                : new Date(g.fecha_final).toLocaleDateString()
+              : "Continuo";
+            const range = `De ${inicio.toLocaleDateString()} - ${endLabel}`;
+            const percent = Math.min(
+              (g.total_ahorrado / g.valor_meta) * 100,
+              100
+            );
+            const barColor = getBarColor(g);
+
+            return (
+              <View key={g.id} style={styles.goalItem}>
+                <View style={styles.barWrapper}>
+                  <View style={styles.barBackground} />
+                  <View
+                    style={[
+                      styles.barFill,
+                      {
+                        width: (SCREEN_WIDTH * percent) / 100,
+                        backgroundColor: barColor,
+                      },
+                    ]}
+                  />
+                  <Text style={styles.barText}>
+                    ${g.total_ahorrado.toLocaleString()} / $
+                    {g.valor_meta.toLocaleString()}
+                  </Text>
+                </View>
+
+                <Text style={styles.goalTitle}>{g.nombre_meta}</Text>
+
+                <View style={styles.line}>
+                  <Text style={styles.labelBold}>Rango de tiempo: </Text>
+                  <Text style={styles.labelRegular}>{range}</Text>
+                </View>
+
+                <View style={styles.line}>
+                  <Text style={styles.labelBold}>Categoría: </Text>
+                  <Text style={styles.labelRegular}>{g.categoria}</Text>
+                </View>
+
+                {idx < goals.length - 1 && <View style={styles.separator} />}
               </View>
-
-              {/* Título */}
-              <Text style={styles.goalTitle}>{g.nombre_meta}</Text>
-
-              {/* Rango de tiempo */}
-              <View style={styles.line}>
-                <Text style={styles.labelBold}>Rango de tiempo: </Text>
-                <Text style={styles.labelRegular}>{range}</Text>
-              </View>
-
-              {/* Categoría */}
-              <View style={styles.line}>
-                <Text style={styles.labelBold}>Categoría: </Text>
-                <Text style={styles.labelRegular}>{g.categoria}</Text>
-              </View>
-
-              {/* Separador */}
-              {idx < goals.length - 1 && <View style={styles.separator} />}
-            </View>
-          );
-        })}
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -158,6 +161,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "SpaceGroteskBold",
     marginBottom: 12,
+  },
+  noGoalsText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontFamily: "SpaceGroteskRegular",
+    textAlign: "center",
+    paddingVertical: 20,
   },
   goalItem: {
     marginBottom: 16,
@@ -183,11 +193,11 @@ const styles = StyleSheet.create({
   },
   barText: {
     position: "absolute",
-    left: 8, // Alineado a la izquierda
+    left: 8,
     fontSize: 18,
     fontFamily: "SpaceGroteskBold",
     color: "#FFFFFF",
-    lineHeight: BAR_HEIGHT, // centra verticalmente
+    lineHeight: BAR_HEIGHT,
   },
   goalTitle: {
     color: "#FFFFFF",

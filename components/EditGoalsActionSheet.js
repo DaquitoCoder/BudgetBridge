@@ -1,3 +1,4 @@
+// components/EditGoalsActionSheet.js
 import React, { useState, useEffect, useImperativeHandle, useRef } from "react";
 import {
   View,
@@ -7,46 +8,67 @@ import {
   ActivityIndicator,
 } from "react-native";
 import ActionSheet from "react-native-actions-sheet";
-import { getDocs, collection } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  query,
+  where, // ← nuevo
+} from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import AddEditGoalActionSheet from "./AddEditGoalActionSheet";
 
 /**
- * EditGoalsActionSheet permite seleccionar una meta existente, editarla, crear nueva o cancelar.
- * - show(): carga las metas y despliega el sheet.
- * - onEdit(data): callback con la meta actualizada.
- * - onAddNew(data): callback con la nueva meta.
+ * EditGoalsActionSheet
+ *  - show(): carga las metas del usuario y muestra el sheet.
+ *  - onEdit(data): callback con la meta actualizada.
+ *  - onAddNew(data): callback con la nueva meta.
+ *
+ * Props adicionales:
+ *  - email (string): email del usuario activo.
  */
+
 const EditGoalsActionSheet = React.forwardRef(
-  ({ onEdit, onAddNew, onCancel }, ref) => {
+  ({ email, onEdit, onAddNew, onCancel }, ref) => {
     const [metas, setMetas] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
+
     const sheetRef = useRef();
     const addEditRef = useRef();
 
+    /* ----------------------- FUENTES ----------------------- */
     const [loaded, error] = useFonts({
       SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
       SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
     });
 
     useEffect(() => {
-      if (loaded || error) {
-        SplashScreen.hideAsync();
-      }
+      if (loaded || error) SplashScreen.hideAsync();
     }, [loaded, error]);
 
+    /* ----------------------- MÉTODOS EXPUESTOS ----------------------- */
     useImperativeHandle(ref, () => ({
+      /** Carga metas filtradas por email y abre el sheet */
       show: async () => {
+        if (!email)
+          return console.warn("No email supplied to EditGoalsActionSheet");
+
         setLoading(true);
         try {
-          const snapshot = await getDocs(collection(db, "meta_ahorro"));
+          // 🔑 Filtra por campo emailUsuario
+          const q = query(
+            collection(db, "meta_ahorro"),
+            where("emailUsuario", "==", email)
+          );
+          const snapshot = await getDocs(q);
+
           const list = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
+
           setMetas(list);
           setSelectedId(null);
         } catch (e) {
@@ -56,9 +78,12 @@ const EditGoalsActionSheet = React.forwardRef(
           sheetRef.current?.show();
         }
       },
+
+      /** Cierra el sheet */
       hide: () => sheetRef.current?.hide(),
     }));
 
+    /* ----------------------- HANDLERS ----------------------- */
     const handleEdit = () => {
       sheetRef.current?.hide();
       addEditRef.current?.show("edit", selectedId);
@@ -74,13 +99,14 @@ const EditGoalsActionSheet = React.forwardRef(
       sheetRef.current?.hide();
     };
 
-    // Callbacks from AddEditGoalActionSheet
+    // Callback que llega desde AddEditGoalActionSheet
     const handleSave = (data, id) => {
       if (id) onEdit?.(data, id);
       else onAddNew?.(data);
       sheetRef.current?.hide();
     };
 
+    /* ----------------------- RENDER ----------------------- */
     if (!loaded && !error) return null;
 
     return (
@@ -95,6 +121,10 @@ const EditGoalsActionSheet = React.forwardRef(
                 color="#B6F2DC"
                 style={{ marginVertical: 20 }}
               />
+            ) : metas.length === 0 ? (
+              <Text style={styles.emptyText}>
+                No hay ninguna meta para editar.{"\n"}Por favor añade una nueva.
+              </Text>
             ) : (
               metas.map((meta) => (
                 <TouchableOpacity
@@ -122,6 +152,7 @@ const EditGoalsActionSheet = React.forwardRef(
               ))
             )}
 
+            {/* Botón editar */}
             <TouchableOpacity
               style={[
                 styles.actionButton,
@@ -144,10 +175,12 @@ const EditGoalsActionSheet = React.forwardRef(
               </Text>
             </TouchableOpacity>
 
+            {/* Botón agregar nueva */}
             <TouchableOpacity style={styles.addButton} onPress={handleAddNew}>
               <Text style={styles.addText}>+ Agregar meta nueva</Text>
             </TouchableOpacity>
 
+            {/* Cancelar */}
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={handleCancel}
@@ -157,7 +190,7 @@ const EditGoalsActionSheet = React.forwardRef(
           </View>
         </ActionSheet>
 
-        {/* ActionSheet form para agregar/editar */}
+        {/* Sheet para agregar / editar metas */}
         <AddEditGoalActionSheet
           ref={addEditRef}
           onSave={handleSave}
@@ -212,6 +245,13 @@ const styles = StyleSheet.create({
     color: "#AAAAAA",
     fontSize: 16,
     fontFamily: "SpaceGroteskRegular",
+  },
+  emptyText: {
+    color: "#AAAAAA",
+    fontSize: 14,
+    fontFamily: "SpaceGroteskRegular",
+    textAlign: "center",
+    marginVertical: 12,
   },
   metaTextSelected: { color: "#B6F2DC" },
   actionButton: {
