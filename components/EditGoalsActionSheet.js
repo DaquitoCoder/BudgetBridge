@@ -60,7 +60,7 @@ const EditGoalsActionSheet = React.forwardRef(
           // 🔑 Filtra por campo emailUsuario
           const q = query(
             collection(db, "meta_ahorro"),
-            where("emailUsuario", "==", email)
+            where("usuario_correo", "==", email)
           );
           const snapshot = await getDocs(q);
 
