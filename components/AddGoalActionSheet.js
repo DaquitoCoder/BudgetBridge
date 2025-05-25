@@ -95,7 +95,14 @@ const AddGoalActionSheet = React.forwardRef(
     if (!loaded && !error) return null;
 
     return (
-      <ActionSheet ref={internalRef} containerStyle={styles.sheetContainer}>
+      <ActionSheet
+        ref={internalRef}
+        containerStyle={styles.sheetContainer}
+        keyboardHandlerEnabled={false}
+        maskEnabled={false}
+        closeOnDragDown={false}
+        gestureEnabled={false}
+      >
         <View style={styles.content}>
           <Text style={styles.title}>Agregar meta principal del mes</Text>
 
@@ -152,7 +159,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#FFFFFF",
     fontSize: 18,
-    
+
     marginBottom: 16,
     textAlign: "center",
     fontFamily: "SpaceGroteskBold",
@@ -177,7 +184,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#1E2429",
     fontSize: 16,
-    
+
     marginLeft: 8,
     fontFamily: "SpaceGroteskBold",
   },

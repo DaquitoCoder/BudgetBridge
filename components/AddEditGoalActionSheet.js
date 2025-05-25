@@ -40,6 +40,25 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
   const [mode, setMode] = useState("add");
   const [goalId, setGoalId] = useState(null);
   const [categories, setCategories] = useState([]);
+
+  const localCategories = [
+    { id: "1", nombre: "Ahorro" },
+    { id: "2", nombre: "Casa" },
+    { id: "3", nombre: "Diversión" },
+    { id: "4", nombre: "Educación" },
+    { id: "5", nombre: "Emergencia" },
+    { id: "6", nombre: "Estudios" },
+    { id: "7", nombre: "Familia" },
+    { id: "8", nombre: "Inversiones" },
+    { id: "9", nombre: "Mobiliario" },
+    { id: "10", nombre: "Tecnología" },
+    { id: "11", nombre: "Trabajo" },
+    { id: "12", nombre: "Retiro" },
+    { id: "13", nombre: "Salud" },
+    { id: "14", nombre: "Viajes" },
+    { id: "15", nombre: "Vivienda" },
+  ];
+
   const frequencies = [
     "Diario",
     "Semanal",
@@ -82,15 +101,7 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
       setGoalId(id || null);
       setLoading(true);
 
-      // Cargar categorías de Firestore
-      try {
-        const snap = await getDocs(collection(db, "categoria"));
-        setCategories(
-          snap.docs.map((d) => ({ id: d.id, nombre: d.data().nombre }))
-        );
-      } catch (e) {
-        console.error("Error cargando categorías:", e);
-      }
+      setCategories(localCategories);
 
       if (_mode === "edit" && id) {
         try {
