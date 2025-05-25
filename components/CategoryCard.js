@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
-const CategoryCard = ({ categories }) => {
+const CategoryCard = ({ categories, onPress }) => {
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
     SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
@@ -18,43 +18,50 @@ const CategoryCard = ({ categories }) => {
   if (!loaded && !error) return null;
 
   return (
-    <View style={styles.dashboardCard}>
+    <TouchableOpacity onPress={onPress}>
+      <View style={styles.dashboardCard}>
+        <Text style={styles.cardTitle}>
+          Tus gastos organizados por categoría
+        </Text>
 
-      <Text style={styles.cardTitle}>
-        Tus gastos organizados por categoría
-      </Text>
-
-      {categories && categories.length > 0 ? (
-        categories.map((category, index) => (
-          <View
-            key={index}
-            style={[
-              styles.categoryItem,
-              index % 2 === 0 ? styles.categoryGreen : styles.categoryPink,
-              { width: `${category.percentage}%` }
-            ]}
-          >
-            <Text style={styles.categoryName}>{category.name}</Text>
-            <Text style={styles.categoryAmount}>${category.amount}</Text>
-          </View>
-        ))
-      ) : (
-        <View>
+        {categories && categories.length > 0 ? (
+          categories.map((category, index) => (
+            <View
+              key={index}
+              style={[
+                styles.categoryItem,
+                index % 2 === 0 ? styles.categoryGreen : styles.categoryPink,
+                { width: `${category.percentage}%` },
+              ]}
+            >
+              <Text style={styles.categoryName}>{category.name}</Text>
+              <Text style={styles.categoryAmount}>${category.amount}</Text>
+            </View>
+          ))
+        ) : (
           <View>
-            <Text style={styles.cardDescription}>
-              Aquí verás{" "}
-              <Text style={styles.highlightText}>cuánto has gastado</Text> en cada{" "}
-              <Text style={styles.highlightText}>categoría</Text>. ¡Una forma
-              clara de detectar en qué se te va más el dinero!
-            </Text>
+            <View>
+              <Text style={styles.cardDescription}>
+                Aquí verás{" "}
+                <Text style={styles.highlightText}>cuánto has gastado</Text> en
+                cada <Text style={styles.highlightText}>categoría</Text>. ¡Una
+                forma clara de detectar en qué se te va más el dinero!
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.categoryItem,
+                styles.categoryGreen,
+                { width: "100%" },
+              ]}
+            >
+              <Text style={styles.categoryName}>No hay gastos registrados</Text>
+              <Text style={styles.categoryAmount}>$0</Text>
+            </View>
           </View>
-          <View style={[styles.categoryItem, styles.categoryGreen, { width: "100%" }]}>
-            <Text style={styles.categoryName}>No hay gastos registrados</Text>
-            <Text style={styles.categoryAmount}>$0</Text>
-          </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -110,4 +117,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoryCard; 
+export default CategoryCard;
