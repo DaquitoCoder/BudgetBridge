@@ -7,16 +7,14 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
 import ActionSheet from "react-native-actions-sheet";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
-import {
-  addDoc, collection, Timestamp
-} from "firebase/firestore";
+import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 
 const formatWithDots = (value) => {
@@ -25,7 +23,7 @@ const formatWithDots = (value) => {
 };
 
 const AddSpendActionSheet = React.forwardRef(
-  ({ gasto, onSaveSuccess, onCancel }, ref) => {
+  ({ gasto, onAdd, onCancel }, ref) => {
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState("");
     const [amount, setAmount] = useState("");
@@ -41,21 +39,21 @@ const AddSpendActionSheet = React.forwardRef(
 
     // Categorías locales
     const localCategories = [
-      { id: '1', nombre: 'Ahorro' },
-      { id: '2', nombre: 'Casa' },
-      { id: '3', nombre: 'Diversión' },
-      { id: '4', nombre: 'Educación' },
-      { id: '5', nombre: 'Emergencia' },
-      { id: '6', nombre: 'Estudios' },
-      { id: '7', nombre: 'Familia' },
-      { id: '8', nombre: 'Inversiones' },
-      { id: '9', nombre: 'Mobiliario' },
-      { id: '10', nombre: 'Tecnología' },
-      { id: '11', nombre: 'Trabajo' },
-      { id: '12', nombre: 'Retiro' },
-      { id: '13', nombre: 'Salud' },
-      { id: '14', nombre: 'Viajes' },
-      { id: '15', nombre: 'Vivienda' }
+      { id: "1", nombre: "Ahorro" },
+      { id: "2", nombre: "Casa" },
+      { id: "3", nombre: "Diversión" },
+      { id: "4", nombre: "Educación" },
+      { id: "5", nombre: "Emergencia" },
+      { id: "6", nombre: "Estudios" },
+      { id: "7", nombre: "Familia" },
+      { id: "8", nombre: "Inversiones" },
+      { id: "9", nombre: "Mobiliario" },
+      { id: "10", nombre: "Tecnología" },
+      { id: "11", nombre: "Trabajo" },
+      { id: "12", nombre: "Retiro" },
+      { id: "13", nombre: "Salud" },
+      { id: "14", nombre: "Viajes" },
+      { id: "15", nombre: "Vivienda" },
     ];
 
     const [loaded, error] = useFonts({
@@ -101,7 +99,7 @@ const AddSpendActionSheet = React.forwardRef(
         setAmount("");
         setName("");
         setFecha("");
-      }
+      },
     }));
 
     const handleSaveSpend = async () => {
@@ -115,16 +113,16 @@ const AddSpendActionSheet = React.forwardRef(
 
         // Guardar como nuevo documento en la colección (auto-ID)
         const docRef = await addDoc(collection(db, "gestion_gasto"), {
-          usuario: email,  // Campo separado (no como ID)
+          usuario: email, // Campo separado (no como ID)
           amount: parseFloat(amount),
           name: name,
           category: category,
-          date: Timestamp.fromDate(new Date())  // Convertir a Timestamp
+          date: Timestamp.fromDate(new Date()), // Convertir a Timestamp
         });
 
         // Ocultar el ActionSheet primero
         internalRef.current?.hide();
-        
+
         // Limpiar los campos
         setCategory("");
         setAmount("");
@@ -137,9 +135,9 @@ const AddSpendActionSheet = React.forwardRef(
             text: "OK",
             onPress: () => {
               // Llamar al callback de éxito para actualizar la lista
-              onSaveSuccess?.();
-            }
-          }
+              onAdd?.();
+            },
+          },
         ]);
       } catch (error) {
         console.error("Error guardando:", error);
@@ -151,15 +149,15 @@ const AddSpendActionSheet = React.forwardRef(
 
     useEffect(() => {
       if (gasto) {
-        setAmount(gasto.amount?.toString() || '');
-        setName(gasto.name || '');
-        setCategory(gasto.category || '');
-        setFecha(gasto.date ? formatDate(gasto.date) : '');
+        setAmount(gasto.amount?.toString() || "");
+        setName(gasto.name || "");
+        setCategory(gasto.category || "");
+        setFecha(gasto.date ? formatDate(gasto.date) : "");
       } else {
-        setAmount('');
-        setName('');
-        setCategory('');
-        setFecha('');
+        setAmount("");
+        setName("");
+        setCategory("");
+        setFecha("");
       }
     }, [gasto]);
 
@@ -170,7 +168,7 @@ const AddSpendActionSheet = React.forwardRef(
     if (!loaded && !error) return null;
 
     const formatDate = (date) => {
-      return date.toLocaleDateString('es-ES');
+      return date.toLocaleDateString("es-ES");
     };
 
     //BORRAR AHORITA
@@ -179,7 +177,8 @@ const AddSpendActionSheet = React.forwardRef(
     }, []);
 
     return (
-      <ActionSheet ref={internalRef}
+      <ActionSheet
+        ref={internalRef}
         containerStyle={styles.sheetContainer}
         keyboardHandlerEnabled={false}
         maskEnabled={false}
@@ -199,76 +198,77 @@ const AddSpendActionSheet = React.forwardRef(
                 size="large"
                 style={{ marginVertical: 20 }}
               />
-            ) : (<>
-              {/* Categoría */}
-              <TouchableOpacity
-                style={styles.row}
-                onPress={() => toggle("category")}
-              >
-                <Text style={styles.rowText}>
-                  {category || "Escoger categoría de gasto"}
-                </Text>
-                <View style={styles.arrowCircle}>
-                  <Feather
-                    name={
-                      openSection === "category"
-                        ? "chevron-down"
-                        : "chevron-right"
-                    }
-                    size={18}
-                    color="#000"
-                  />
-                </View>
-              </TouchableOpacity>
-              {openSection === "category" &&
-                categories.map((c) => (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={styles.optionItem}
-                    onPress={() => {
-                      setCategory(c.nombre);
-                      setOpenSection(null);
-                    }}
-                  >
-                    <Text style={styles.optionText}>{c.nombre}</Text>
-                  </TouchableOpacity>
-                ))}
+            ) : (
+              <>
+                {/* Categoría */}
+                <TouchableOpacity
+                  style={styles.row}
+                  onPress={() => toggle("category")}
+                >
+                  <Text style={styles.rowText}>
+                    {category || "Escoger categoría de gasto"}
+                  </Text>
+                  <View style={styles.arrowCircle}>
+                    <Feather
+                      name={
+                        openSection === "category"
+                          ? "chevron-down"
+                          : "chevron-right"
+                      }
+                      size={18}
+                      color="#000"
+                    />
+                  </View>
+                </TouchableOpacity>
+                {openSection === "category" &&
+                  categories.map((c) => (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={styles.optionItem}
+                      onPress={() => {
+                        setCategory(c.nombre);
+                        setOpenSection(null);
+                      }}
+                    >
+                      <Text style={styles.optionText}>{c.nombre}</Text>
+                    </TouchableOpacity>
+                  ))}
 
-              <TextInput
-                style={styles.input}
-                placeholder="Escribe el monto gastado $$$"
-                placeholderTextColor="#ccc"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Escribe el monto gastado $$$"
+                  placeholderTextColor="#ccc"
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Describe en que gastaste el dinero"
-                placeholderTextColor="#ccc"
-                value={name}
-                onChangeText={setName}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Describe en que gastaste el dinero"
+                  placeholderTextColor="#ccc"
+                  value={name}
+                  onChangeText={setName}
+                />
 
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={handleSaveSpend}
-                disabled={saving}
-              >
-                <Feather name="plus" size={18} color="#1E2429" />
-                <Text style={styles.addButtonText}>
-                  {saving ? "Guardando..." : "Agregar gasto"}
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={handleSaveSpend}
+                  disabled={saving}
+                >
+                  <Feather name="plus" size={18} color="#1E2429" />
+                  <Text style={styles.addButtonText}>
+                    {saving ? "Guardando..." : "Agregar gasto"}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => ref?.current?.hide()}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => ref?.current?.hide()}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
         </ScrollView>
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#FFFFFF",
     fontSize: 18,
-    
+
     marginBottom: 16,
     textAlign: "center",
     fontFamily: "SpaceGroteskBold",
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#1E2429",
     fontSize: 16,
-    
+
     marginLeft: 8,
     fontFamily: "SpaceGroteskBold",
   },
@@ -361,6 +361,5 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGroteskRegular",
   },
 });
-
 
 export default AddSpendActionSheet;

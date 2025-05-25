@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useAuth } from "../contexts/AuthContext";
@@ -21,6 +21,7 @@ const DashboardScreen = () => {
   const addSheetRef = useRef();
   const addIncomeSheetRef = useRef();
   const [topCategories, setTopCategories] = useState([]);
+  const isFocused = useIsFocused();
 
   const [loaded, error] = useFonts({
     SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
@@ -84,8 +85,8 @@ const DashboardScreen = () => {
       }
     };
 
-    if (email) fetchTopCategories();
-  }, [email]);
+    if (email && isFocused) fetchTopCategories();
+  }, [email, isFocused]);
 
   const navigateToAllGoals = () => {
     navigation.navigate("GoalsScreen", { email });
