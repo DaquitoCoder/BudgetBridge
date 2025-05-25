@@ -1,18 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import SavingsCard from "../components/SavingsCard";
-import CategoryCard from '../components/CategoryCard';
-import ProgressCard from '../components/ProgressCard';
+import CategoryCard from "../components/CategoryCard";
+import ProgressCard from "../components/ProgressCard";
 import AddSpendActionSheet from "../components/AddSpendActionSheet";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase/config";
@@ -43,7 +38,14 @@ const DashboardScreen = () => {
       try {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const endOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59
+        );
         const startTimestamp = Timestamp.fromDate(startOfMonth);
         const endTimestamp = Timestamp.fromDate(endOfMonth);
 
@@ -71,12 +73,11 @@ const DashboardScreen = () => {
           .slice(0, 5)
           .map((cat, idx) => ({
             ...cat,
-            amount: cat.amount.toLocaleString('es-CO'),
-            percentage: 100 - idx * 10
+            amount: cat.amount.toLocaleString("es-CO"),
+            percentage: 100 - idx * 10,
           }));
 
         setTopCategories(sorted);
-
       } catch (e) {
         console.error("Error al obtener categorías:", e);
         setTopCategories([]);
@@ -85,7 +86,6 @@ const DashboardScreen = () => {
 
     if (email) fetchTopCategories();
   }, [email]);
-
 
   const navigateToAllGoals = () => {
     navigation.navigate("GoalsScreen", { email });
@@ -104,7 +104,6 @@ const DashboardScreen = () => {
   };
 
   const onAddNew = () => {
-    
     console.log("Gasto agregado exitosamente");
   };
 
@@ -114,6 +113,10 @@ const DashboardScreen = () => {
 
   const onCancel = () => {
     console.log("Operación cancelada");
+  };
+
+  const goToSpendManagement = () => {
+    navigation.navigate("SpendManagementScreen");
   };
 
   if (!loaded && !error) return null;
@@ -135,11 +138,11 @@ const DashboardScreen = () => {
         {/* Tarjeta de categorías */}
         <CategoryCard
           categories={topCategories}
+          onPress={goToSpendManagement}
         />
 
         {/* Tarjeta de metas */}
         <SavingsCard email={email} onViewAllPress={navigateToAllGoals} />
-
       </ScrollView>
 
       <AddSpendActionSheet
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 24,
     marginBottom: 16,
-    fontFamily: "SpaceGroteskBold"
+    fontFamily: "SpaceGroteskBold",
   },
 });
 
