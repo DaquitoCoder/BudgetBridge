@@ -19,7 +19,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNotification } from "../contexts/NotificationContext";
 
 const AddIncomeActionSheet = React.forwardRef(
-  ({ ingreso, onSaveSuccess, onCancel }, ref) => {
+  ({ ingreso, onAdd, onCancel }, ref) => {
     const { triggerRefresh } = useNotification();
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState("");
@@ -129,7 +129,7 @@ const AddIncomeActionSheet = React.forwardRef(
           {
             text: "OK",
             onPress: () => {
-              onSaveSuccess?.();
+              onAdd?.();
             },
           },
         ]);
