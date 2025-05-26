@@ -18,6 +18,7 @@ import GoalsScreen from "../screens/GoalsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import SuggestionsScreen from "../screens/SuggestionsScreen";
 import ProfileConfigScreen from "../screens/ProfileConfig";
+import { NotificationProvider } from "../contexts/NotificationContext";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -58,7 +59,7 @@ const AuthStack = () => {
 const NotificationsDrawer = () => (
   <Drawer.Navigator
     id="NotificationsDrawer"
-    drawerContent={() => <NotificationsScreen />}
+    drawerContent={(props) => <NotificationsScreen {...props} />}
     screenOptions={{
       headerShown: false,
       drawerPosition: "right", // Menú izquierdo para notificaciones
@@ -168,12 +169,14 @@ export const AppNavigator = () => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#1E2429" />
-      <NavigationContainer>
-        {isAuthenticated ? <NotificationsDrawer /> : <AuthStack />}
-      </NavigationContainer>
-    </SafeAreaView>
+    <NotificationProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#1E2429" />
+        <NavigationContainer>
+          {isAuthenticated ? <NotificationsDrawer /> : <AuthStack />}
+        </NavigationContainer>
+      </SafeAreaView>
+    </NotificationProvider>
   );
 };
 

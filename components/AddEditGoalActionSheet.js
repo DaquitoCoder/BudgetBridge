@@ -14,17 +14,11 @@ import ActionSheet from "react-native-actions-sheet";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as SplashScreen from "expo-splash-screen";
 import { Feather } from "@expo/vector-icons";
-import {
-  getDocs,
-  getDoc,
-  collection,
-  doc,
-  setDoc,
-  addDoc,
-} from "firebase/firestore";
+import { getDoc, collection, doc, setDoc, addDoc } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
+import { useNotification } from "../contexts/NotificationContext";
 
 // Formatea números con puntos de miles
 const formatWithDots = (value) => {
@@ -33,6 +27,7 @@ const formatWithDots = (value) => {
 };
 
 const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
+  const { triggerRefresh } = useNotification();
   const sheetRef = useRef();
   const { currentUser } = useAuth();
   const userEmail = currentUser?.email || "";
@@ -192,6 +187,22 @@ const AddEditGoalActionSheet = React.forwardRef(({ onSave, onCancel }, ref) => {
       } else {
         await addDoc(collection(db, "meta_ahorro"), payload);
       }
+
+      await addDoc(collection(db, "notificaciones"), {
+        fecha: new Date(),
+        tipo: "meta",
+        accion: goalId
+          ? `La meta "${name}" ha sido editada. Nuevo ahorro: $${total_ahorrado_num.toLocaleString(
+              "es-CO"
+            )}`
+          : `Nueva meta "${name}" agregada con un valor objetivo de $${valor_meta_num.toLocaleString(
+              "es-CO"
+            )}`,
+        usuario: userEmail,
+        estado: true,
+      });
+      triggerRefresh();
+
       onSave(payload, goalId);
       sheetRef.current?.hide();
     } catch (e) {

@@ -7,20 +7,20 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
 import ActionSheet from "react-native-actions-sheet";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
-import {
-  addDoc, collection, Timestamp
-} from "firebase/firestore";
+import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotification } from "../contexts/NotificationContext";
 
 const AddIncomeActionSheet = React.forwardRef(
   ({ ingreso, onSaveSuccess, onCancel }, ref) => {
+    const { triggerRefresh } = useNotification();
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState("");
     const [amount, setAmount] = useState("");
@@ -36,15 +36,15 @@ const AddIncomeActionSheet = React.forwardRef(
 
     // Categorías locales
     const localCategories = [
-      { id: '1', nombre: 'Salario' },
-      { id: '2', nombre: 'Freelance' },
-      { id: '3', nombre: 'Inversiones' },
-      { id: '4', nombre: 'Negocios' },
-      { id: '5', nombre: 'Alquileres' },
-      { id: '6', nombre: 'Ventas' },
-      { id: '7', nombre: 'Regalos' },
-      { id: '8', nombre: 'Reembolsos' },
-      { id: '9', nombre: 'Otros' }
+      { id: "1", nombre: "Salario" },
+      { id: "2", nombre: "Freelance" },
+      { id: "3", nombre: "Inversiones" },
+      { id: "4", nombre: "Negocios" },
+      { id: "5", nombre: "Alquileres" },
+      { id: "6", nombre: "Ventas" },
+      { id: "7", nombre: "Regalos" },
+      { id: "8", nombre: "Reembolsos" },
+      { id: "9", nombre: "Otros" },
     ];
 
     const [loaded, error] = useFonts({
@@ -89,7 +89,7 @@ const AddIncomeActionSheet = React.forwardRef(
         setAmount("");
         setName("");
         setFecha("");
-      }
+      },
     }));
 
     const handleSaveIncome = async () => {
@@ -106,24 +106,35 @@ const AddIncomeActionSheet = React.forwardRef(
           amount: parseFloat(amount),
           name: name,
           category: category,
-          date: Timestamp.fromDate(new Date())
+          date: Timestamp.fromDate(new Date()),
         });
 
         internalRef.current?.hide();
-        
+
         setCategory("");
         setAmount("");
         setName("");
         setFecha("");
+        await addDoc(collection(db, "notificaciones"), {
+          fecha: new Date(),
+          tipo: "movimiento",
+          accion: `Ingreso registrado: $${parseFloat(amount).toLocaleString(
+            "es-CO"
+          )} por ${name}`,
+          usuario: email,
+          estado: true,
+        });
 
         Alert.alert("Éxito", "Ingreso registrado", [
           {
             text: "OK",
             onPress: () => {
               onSaveSuccess?.();
-            }
-          }
+            },
+          },
         ]);
+
+        triggerRefresh();
       } catch (error) {
         console.error("Error guardando:", error);
         Alert.alert("Error", "No se pudo guardar. Error: " + error.message);
@@ -134,15 +145,15 @@ const AddIncomeActionSheet = React.forwardRef(
 
     useEffect(() => {
       if (ingreso) {
-        setAmount(ingreso.amount?.toString() || '');
-        setName(ingreso.name || '');
-        setCategory(ingreso.category || '');
-        setFecha(ingreso.date ? formatDate(ingreso.date) : '');
+        setAmount(ingreso.amount?.toString() || "");
+        setName(ingreso.name || "");
+        setCategory(ingreso.category || "");
+        setFecha(ingreso.date ? formatDate(ingreso.date) : "");
       } else {
-        setAmount('');
-        setName('');
-        setCategory('');
-        setFecha('');
+        setAmount("");
+        setName("");
+        setCategory("");
+        setFecha("");
       }
     }, [ingreso]);
 
@@ -153,11 +164,12 @@ const AddIncomeActionSheet = React.forwardRef(
     if (!loaded && !error) return null;
 
     const formatDate = (date) => {
-      return date.toLocaleDateString('es-ES');
+      return date.toLocaleDateString("es-ES");
     };
 
     return (
-      <ActionSheet ref={internalRef}
+      <ActionSheet
+        ref={internalRef}
         containerStyle={styles.sheetContainer}
         keyboardHandlerEnabled={false}
         maskEnabled={false}
@@ -177,76 +189,77 @@ const AddIncomeActionSheet = React.forwardRef(
                 size="large"
                 style={{ marginVertical: 20 }}
               />
-            ) : (<>
-              {/* Categoría */}
-              <TouchableOpacity
-                style={styles.row}
-                onPress={() => toggle("category")}
-              >
-                <Text style={styles.rowText}>
-                  {category || "Escoger categoría de ingreso"}
-                </Text>
-                <View style={styles.arrowCircle}>
-                  <Feather
-                    name={
-                      openSection === "category"
-                        ? "chevron-down"
-                        : "chevron-right"
-                    }
-                    size={18}
-                    color="#000"
-                  />
-                </View>
-              </TouchableOpacity>
-              {openSection === "category" &&
-                categories.map((c) => (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={styles.optionItem}
-                    onPress={() => {
-                      setCategory(c.nombre);
-                      setOpenSection(null);
-                    }}
-                  >
-                    <Text style={styles.optionText}>{c.nombre}</Text>
-                  </TouchableOpacity>
-                ))}
+            ) : (
+              <>
+                {/* Categoría */}
+                <TouchableOpacity
+                  style={styles.row}
+                  onPress={() => toggle("category")}
+                >
+                  <Text style={styles.rowText}>
+                    {category || "Escoger categoría de ingreso"}
+                  </Text>
+                  <View style={styles.arrowCircle}>
+                    <Feather
+                      name={
+                        openSection === "category"
+                          ? "chevron-down"
+                          : "chevron-right"
+                      }
+                      size={18}
+                      color="#000"
+                    />
+                  </View>
+                </TouchableOpacity>
+                {openSection === "category" &&
+                  categories.map((c) => (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={styles.optionItem}
+                      onPress={() => {
+                        setCategory(c.nombre);
+                        setOpenSection(null);
+                      }}
+                    >
+                      <Text style={styles.optionText}>{c.nombre}</Text>
+                    </TouchableOpacity>
+                  ))}
 
-              <TextInput
-                style={styles.input}
-                placeholder="Escribe el monto recibido $$$"
-                placeholderTextColor="#ccc"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Escribe el monto recibido $$$"
+                  placeholderTextColor="#ccc"
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Describe el ingreso"
-                placeholderTextColor="#ccc"
-                value={name}
-                onChangeText={setName}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Describe el ingreso"
+                  placeholderTextColor="#ccc"
+                  value={name}
+                  onChangeText={setName}
+                />
 
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={handleSaveIncome}
-                disabled={saving}
-              >
-                <Feather name="plus" size={18} color="#1E2429" />
-                <Text style={styles.addButtonText}>
-                  {saving ? "Guardando..." : "Agregar ingreso"}
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={handleSaveIncome}
+                  disabled={saving}
+                >
+                  <Feather name="plus" size={18} color="#1E2429" />
+                  <Text style={styles.addButtonText}>
+                    {saving ? "Guardando..." : "Agregar ingreso"}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => ref?.current?.hide()}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => ref?.current?.hide()}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
         </ScrollView>
@@ -338,4 +351,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddIncomeActionSheet; 
+export default AddIncomeActionSheet;
