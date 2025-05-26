@@ -16,6 +16,7 @@ import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotification } from "../contexts/NotificationContext";
 
 const formatWithDots = (value) => {
   const numeric = value.replace(/\D/g, "");
@@ -24,6 +25,7 @@ const formatWithDots = (value) => {
 
 const AddSpendActionSheet = React.forwardRef(
   ({ gasto, onAdd, onCancel }, ref) => {
+    const { triggerRefresh } = useNotification();
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState("");
     const [amount, setAmount] = useState("");
@@ -129,6 +131,16 @@ const AddSpendActionSheet = React.forwardRef(
         setName("");
         setFecha("");
 
+        await addDoc(collection(db, "notificaciones"), {
+          fecha: new Date(),
+          tipo: "movimiento",
+          accion: `Gasto registrado: $${parseFloat(amount).toLocaleString(
+            "es-CO"
+          )} en ${name}`,
+          usuario: email,
+          estado: true,
+        });
+
         // Notificar éxito y actualizar la lista
         Alert.alert("Éxito", "Gasto registrado", [
           {
@@ -139,6 +151,8 @@ const AddSpendActionSheet = React.forwardRef(
             },
           },
         ]);
+
+        triggerRefresh();
       } catch (error) {
         console.error("Error guardando:", error);
         Alert.alert("Error", "No se pudo guardar. Error: " + error.message);

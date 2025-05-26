@@ -1,24 +1,109 @@
-import React from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useDrawerStatus } from "@react-navigation/drawer";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  updateDoc,
+  doc,
+  writeBatch,
+} from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { db } from "../firebase/config";
+import { useAuth } from "../contexts/AuthContext";
+import GoalNotification from "../components/notifications/GoalNotification";
+import MovementNotification from "../components/notifications/MovementNotification";
+import SuggestionNotification from "../components/notifications/SuggestionNotification";
 
-const NotificationsScreen = () => {
-  const navigation = useNavigation();
+const NotificationsScreen = ({ navigation }) => {
+  const { currentUser } = useAuth();
+  const drawerStatus = useDrawerStatus();
+  const [notifications, setNotifications] = useState([]);
+  const [suggestionRead, setSuggestionRead] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const closeDrawer = () => {
-    navigation.goBack();
+  const fetchNotifications = async () => {
+    try {
+      const q = query(
+        collection(db, "notificaciones"),
+        where("usuario", "==", currentUser.email),
+        orderBy("fecha", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setNotifications(data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const navigateToGoals = () => {
-    navigation.navigate("GoalsScreen");
+  const checkSuggestionStatus = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const key = `suggestion_seen_${today}`;
+    const seen = await AsyncStorage.getItem(key);
+    setSuggestionRead(seen === "true");
   };
+
+  const markAllAsRead = async () => {
+    try {
+      const q = query(
+        collection(db, "notificaciones"),
+        where("usuario", "==", currentUser.email),
+        where("estado", "==", true)
+      );
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.forEach((docSnap) => {
+        batch.update(doc(db, "notificaciones", docSnap.id), {
+          estado: false,
+        });
+      });
+      await batch.commit();
+
+      // También marcar sugerencia como leída
+      const today = new Date().toISOString().split("T")[0];
+      await AsyncStorage.setItem(`suggestion_seen_${today}`, "true");
+      setSuggestionRead(true);
+
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error marcando como leídas:", error);
+    }
+  };
+
+  // Recarga al entrar a la screen
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications();
+      checkSuggestionStatus();
+    }, [currentUser.email])
+  );
+
+  // Recarga si el drawer se abre
+  useEffect(() => {
+    if (drawerStatus === "open") {
+      setLoading(true);
+      fetchNotifications();
+      checkSuggestionStatus();
+    }
+  }, [drawerStatus]);
 
   return (
     <View style={styles.container}>
@@ -27,78 +112,65 @@ const NotificationsScreen = () => {
           <Feather name="bell" size={24} color="#B6F2DC" />
           <Text style={styles.title}>Novedades que te ayudan</Text>
         </View>
-        <TouchableOpacity onPress={closeDrawer}>
+        <TouchableOpacity onPress={() => navigation.closeDrawer()}>
           <Feather name="x-circle" size={24} color="#B6F2DC" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.line} />
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={markAllAsRead}>
         <Text style={styles.markAll}>Marcar como leído todo</Text>
       </TouchableOpacity>
 
-      <ScrollView style={styles.notificationsList}>
-        {/* Sugerencias */}
-        <View
-          style={[styles.notificationItem, { borderBottomColor: "#B6F2DC" }]}
-        >
-          <Text style={styles.notificationDate}>
-            Hoy • Hace unos minutos • Sugerencias
-          </Text>
-          <View style={styles.notificationContent}>
-            <Text style={styles.notificationText}>
-              Has gastado más de lo habitual en "Comidas afuera". ¿Quieres
-              revisar tus hábitos?
-            </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { borderColor: "#B6F2DC" }]}
-            >
-              <Feather name="arrow-right" size={24} color="#B6F2DC" />
-            </TouchableOpacity>
-          </View>
-        </View>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#B6F2DC"
+          style={{ marginTop: 20 }}
+        />
+      ) : (
+        <ScrollView style={styles.notificationsList}>
+          {/* Sugerencia diaria */}
+          <SuggestionNotification
+            key="sugerencia-diaria"
+            date={new Date()}
+            message='Has gastado más de lo habitual en "Comidas afuera". ¿Quieres revisar tus hábitos?'
+            read={suggestionRead}
+          />
 
-        {/* Metas de ahorro */}
-        <View
-          style={[styles.notificationItem, { borderBottomColor: "#D95F80" }]}
-        >
-          <Text style={styles.notificationDate}>
-            Hoy • Hace una hora • Metas de ahorro
-          </Text>
-          <View style={styles.notificationContent}>
-            <Text style={styles.notificationText}>
-              ¡Ya casi alcanzas tu meta de ahorro de abril! Estás a un paso de
-              lograrlo.
-            </Text>
-            <TouchableOpacity
-              onPress={navigateToGoals}
-              style={[styles.iconButton, { borderColor: "#D95F80" }]}
-            >
-              <Feather name="arrow-right" size={24} color="#D95F80" />
-            </TouchableOpacity>
-          </View>
-        </View>
+          {/* Notificaciones desde Firebase */}
+          {notifications.map((notif) => {
+            const date = notif.fecha?.toDate?.() || new Date();
+            const read = notif.estado === false;
 
-        {/* Movimientos */}
-        <View
-          style={[styles.notificationItem, { borderBottomColor: "#7AB6DA" }]}
-        >
-          <Text style={styles.notificationDate}>
-            20/04/25 • 11:00 pm • Movimientos
-          </Text>
-          <View style={styles.notificationContent}>
-            <Text style={styles.notificationText}>
-              Agregaste un nuevo ingreso: $500.000 - "Freelance"
-            </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { borderColor: "#7AB6DA" }]}
-            >
-              <Feather name="arrow-right" size={24} color="#7AB6DA" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
+            switch (notif.tipo) {
+              case "meta":
+                return (
+                  <GoalNotification
+                    key={notif.id}
+                    id={notif.id}
+                    date={date}
+                    message={notif.accion}
+                    read={read}
+                  />
+                );
+              case "movimiento":
+                return (
+                  <MovementNotification
+                    key={notif.id}
+                    id={notif.id}
+                    date={date}
+                    message={notif.accion}
+                    read={read}
+                  />
+                );
+              default:
+                return null;
+            }
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -138,32 +210,6 @@ const styles = StyleSheet.create({
   },
   notificationsList: {
     flex: 1,
-  },
-  notificationItem: {
-    marginBottom: 16,
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-  },
-  notificationDate: {
-    color: "#8E9A9D",
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  notificationContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  notificationText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    flex: 1,
-    paddingRight: 8,
-  },
-  iconButton: {
-    padding: 4,
-    borderWidth: 1,
-    borderRadius: 8,
   },
 });
 

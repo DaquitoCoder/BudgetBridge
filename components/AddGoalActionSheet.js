@@ -12,10 +12,12 @@ import * as SplashScreen from "expo-splash-screen";
 import ActionSheet from "react-native-actions-sheet";
 import { db } from "../firebase/config";
 import { useFonts } from "expo-font";
-import { collection, doc, setDoc, getDoc } from "firebase/firestore"; // Añadido getDoc
+import { collection, doc, setDoc, getDoc, addDoc } from "firebase/firestore"; // Añadido getDoc
+import { useNotification } from "../contexts/NotificationContext";
 
 const AddGoalActionSheet = React.forwardRef(
   ({ email, meta, onSaveSuccess }, ref) => {
+    const { triggerRefresh } = useNotification();
     const [valorMeta, setValorMeta] = useState("");
     const [valorAhorrado, setValorAhorrado] = useState("");
     const [saving, setSaving] = useState(false);
@@ -80,8 +82,23 @@ const AddGoalActionSheet = React.forwardRef(
           usuario_email: email,
         });
 
-        Alert.alert("Éxito", "¡Meta guardada exitosamente!");
+        await addDoc(collection(db, "notificaciones"), {
+          fecha: new Date(),
+          tipo: "meta",
+          accion: meta
+            ? `Has editado tu meta mensual. Total: $${parseFloat(
+                valorAhorrado
+              ).toLocaleString("es-CO")}`
+            : `Meta mensual agregada por un valor de $${parseFloat(
+                valorMeta
+              ).toLocaleString("es-CO")}`,
+          usuario: email,
+          estado: true,
+        });
 
+        triggerRefresh();
+
+        Alert.alert("Éxito", "¡Meta guardada exitosamente!");
         ref?.current?.hide();
         onSaveSuccess?.();
       } catch (error) {

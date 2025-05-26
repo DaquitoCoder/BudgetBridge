@@ -1,27 +1,63 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { useAuth } from "../contexts/AuthContext";
+import { useNotification } from "../contexts/NotificationContext";
 
 const Header = () => {
+  const { refreshNotifications } = useNotification();
   const navigation = useNavigation();
+  const { currentUser } = useAuth();
+  const [showDot, setShowDot] = useState(false);
+
+  useEffect(() => {
+    checkNotifications();
+  }, [refreshNotifications]);
+
+  const checkNotifications = async () => {
+    try {
+      // 🔴 Verificar notificaciones en Firestore
+      const q = query(
+        collection(db, "notificaciones"),
+        where("usuario", "==", currentUser.email),
+        where("estado", "==", true)
+      );
+      const snapshot = await getDocs(q);
+      const hasUnread = snapshot.docs.length > 0;
+
+      // 🔴 Verificar sugerencia diaria local
+      const today = new Date().toISOString().split("T")[0];
+      const seenKey = `suggestion_seen_${today}`;
+      const seen = await AsyncStorage.getItem(seenKey);
+      const hasSuggestion = seen !== "true";
+
+      // 🔴 Mostrar punto si hay algo pendiente
+      setShowDot(hasUnread || hasSuggestion);
+    } catch (err) {
+      console.error("Error verificando notificaciones:", err);
+    }
+  };
 
   const openMenu = () => {
-    // Aquí puedes implementar la lógica para abrir el menú lateral
     navigation.openDrawer();
   };
 
-  const openNotifications = () => {
-    // Navegar a la pantalla de notificaciones
-    navigation.getParent("NotificationsDrawer").openDrawer();
-  };
+  const openNotifications = async () => {
+    // Marcar sugerencia como leída
+    const today = new Date().toISOString().split("T")[0];
+    const seenKey = `suggestion_seen_${today}`;
+    await AsyncStorage.setItem(seenKey, "true");
 
-  const [loaded, error] = useFonts({
-    SpaceGroteskBold: require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
-    SpaceGroteskRegular: require("../assets/fonts/SpaceGrotesk-Regular.ttf"),
-  });
+    // Ir a la pantalla de notificaciones
+    navigation.getParent("NotificationsDrawer").openDrawer();
+
+    // Ocultar el punto rojo
+    setShowDot(false);
+  };
 
   const goToDashboard = () => {
     navigation.navigate("DashboardDrawer", {
@@ -29,12 +65,6 @@ const Header = () => {
       params: { screen: 0 },
     });
   };
-
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
 
   return (
     <View style={styles.header}>
@@ -51,6 +81,7 @@ const Header = () => {
       <View style={styles.rightSection}>
         <TouchableOpacity onPress={openNotifications} style={styles.iconButton}>
           <Feather name="bell" size={24} color="#FFFFFF" />
+          {showDot && <View style={styles.redDot} />}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={openMenu} style={styles.iconButton}>
@@ -82,12 +113,6 @@ const styles = StyleSheet.create({
     height: 48,
     marginRight: 8,
   },
-  appName: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontFamily: "SpaceGroteskRegular",
-    width: 80,
-  },
   rightSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -95,6 +120,16 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 8,
     marginLeft: 8,
+    position: "relative",
+  },
+  redDot: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    width: 10,
+    height: 10,
+    backgroundColor: "red",
+    borderRadius: 5,
   },
 });
 
