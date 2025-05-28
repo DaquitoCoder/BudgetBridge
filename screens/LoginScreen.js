@@ -227,6 +227,10 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#1E2429",
